@@ -9,18 +9,24 @@ passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.GOOGLE_CALLBACK_URL
-}, (accessToken, refreshToken, profile, done) => {
-  User.findOrCreate({ googleId: profile.id }, (err, user) => {
-    return done(err, user);
-  });
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    const user = await User.findOrCreate(profile);
+    return done(null, user);
+  } catch (err) {
+    return done(err, null);
+  }
 }));
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-passport.deserializeUser((id, done) => {
-  User.findById(id, (err, user) => {
-    done(err, user);
-  });
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
 });

@@ -5,20 +5,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // Otros campos que necesites
 });
 
-userSchema.statics.findOrCreate = function findOrCreate(profile, cb) {
-  const userObj = new this();
-  this.findOne({ googleId: profile.id }, (err, result) => {
-    if (!result) {
-      userObj.googleId = profile.id;
-      // Rellenar otros campos si es necesario
-      userObj.save(cb);
-    } else {
-      cb(err, result);
-    }
-  });
+userSchema.statics.findOrCreate = async function (profile) {
+  let user = await this.findOne({ googleId: profile.id });
+  if (!user) {
+    user = new this({ googleId: profile.id });
+    await user.save();
+  }
+  return user;
 };
 
 const User = mongoose.model('User', userSchema);
