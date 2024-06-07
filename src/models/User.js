@@ -1,20 +1,25 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+  googleId: {
+    type: String,
+    required: true,
+  },
+  // Otros campos que necesites
 });
 
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
+userSchema.statics.findOrCreate = function findOrCreate(profile, cb) {
+  const userObj = new this();
+  this.findOne({ googleId: profile.id }, (err, result) => {
+    if (!result) {
+      userObj.googleId = profile.id;
+      // Rellenar otros campos si es necesario
+      userObj.save(cb);
+    } else {
+      cb(err, result);
     }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-});
+  });
+};
 
 const User = mongoose.model('User', userSchema);
-
 export default User;

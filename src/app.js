@@ -4,7 +4,9 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import './config/passport.js';
 import routes from './routes/index.js';
-import config from '../config/config.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 
@@ -14,10 +16,10 @@ app.use(express.urlencoded({ extended: false }));
 
 // Session
 app.use(session({
-    secret: 'your-secret',
+    secret: process.env.SESSION_SECRET || 'your-secret',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: config.MONGO_URI || 'mongodb://localhost:27017/' })
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/classifieds' })
 }));
 
 // Passport
