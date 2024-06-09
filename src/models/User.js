@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
     required: true,
+    unique: true
   },
   displayName: {
     type: String,
@@ -11,11 +12,12 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    unique: true,
+    sparse: true
   },
   profilePhoto: {
     type: String,
   },
-  // TODO: Check if other fields are neccesary
 });
 
 userSchema.statics.findOrCreate = async function (profile) {
@@ -26,13 +28,13 @@ userSchema.statics.findOrCreate = async function (profile) {
     const profilePhoto = profile.photos && profile.photos[0] ? profile.photos[0].value : '';
 
     if (user) {
-      // Update user if exists
+      // Update user if exist
       user.displayName = displayName;
       user.email = email;
       user.profilePhoto = profilePhoto;
-      // Add fields if neccessary
       await user.save();
     } else {
+      // Create a new user
       user = new this({
         googleId: profile.id,
         displayName: displayName,
