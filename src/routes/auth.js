@@ -1,5 +1,9 @@
 import express from 'express';
 import passport from 'passport';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const router = express.Router();
 
@@ -10,9 +14,11 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 // @desc    Google auth callback
 // @route   GET /auth/google/callback
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
+  passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    res.json({ token: req.user.token, user: req.user });
+    const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`);
   }
 );
 
