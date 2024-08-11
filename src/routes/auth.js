@@ -23,10 +23,12 @@ router.get('/google/callback',
 );
 
 // @desc    Logout user
-// @route   GET /auth/logout
-router.get('/logout', (req, res) => {
-  req.logout();
-  res.redirect('/');
+// @route   POST /auth/logout
+router.post('/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) { return next(err); }
+    res.status(200).json({ message: 'Logout successful' });
+  });
 });
 
 export default router;
