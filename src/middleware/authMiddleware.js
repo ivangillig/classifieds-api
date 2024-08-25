@@ -1,34 +1,56 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import {
+  getUnauthorizedErrorResponse,
+  getNotFoundErrorResponse,
+} from "../utils/responseUtils.js";
 
+// Error messages
+const ERROR_INVALID_TOKEN = "ERROR_INVALID_TOKEN";
+const ERROR_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND";
+
+// Middleware to authenticate a token without verifying the user
 export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) return res.sendStatus(401);
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res
+      .status(401)
+      .json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      return res
+        .status(403)
+        .json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
+    }
     req.user = user;
     next();
   });
 };
 
+// Middleware to authenticate a token and verify the user
 export const authenticateUser = async (req, res, next) => {
-  const token = req.header('Authorization').replace('Bearer ', '');
+  const token = req.header("Authorization").replace("Bearer ", "");
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('displayName email profilePhoto');
+    const user = await User.findById(decoded.id).select(
+      "displayName email profilePhoto"
+    );
 
     if (!user) {
-      return res.status(401).json({ error: 'User not found' });
+      return res
+        .status(401)
+        .json(getNotFoundErrorResponse(ERROR_USER_NOT_FOUND));
     }
 
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
   }
 };
 

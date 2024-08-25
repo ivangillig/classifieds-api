@@ -13,32 +13,33 @@ dotenv.config();
 const router = express.Router();
 
 // Error messages
-const ERROR_VALIDATION_FAILED = "ERROR_VALIDATION_FAILED";
 const SUCCESS_LISTING_CREATED = "SUCCESS_LISTING_CREATED";
 
 // Validation messages
-const MSG_TITLE_REQUIRED = "MSG_TITLE_REQUIRED";
-const MSG_LOCATION_REQUIRED = "MSG_LOCATION_REQUIRED";
-const MSG_PRICE_MUST_BE_NUMBER = "MSG_PRICE_MUST_BE_NUMBER";
-const MSG_PHONE_MUST_BE_NUMBER = "MSG_PHONE_MUST_BE_NUMBER";
-const MSG_USE_WHATSAPP_BOOLEAN = "MSG_USE_WHATSAPP_BOOLEAN";
+const ERROR_TITLE_REQUIRED = "ERROR_TITLE_REQUIRED";
+const ERROR_LOCATION_REQUIRED = "ERROR_LOCATION_REQUIRED";
+const ERROR_PRICE_REQUIRED = "ERROR_PRICE_REQUIRED";
+const ERROR_PRICE_MUST_BE_NUMBER = "ERROR_PRICE_MUST_BE_NUMBER";
+const ERROR_PHONE_MUST_BE_NUMBER = "ERROR_PHONE_MUST_BE_NUMBER";
+const ERROR_PHONE_REQUIRED = "ERROR_PHONE_REQUIRED";
+const ERROR_USE_WHATSAPP_BOOLEAN = "ERROR_USE_WHATSAPP_BOOLEAN";
 
 router.post(
   "/createListing",
   authenticateUser, // Middleware to validate that user is logged in
   [
-    body("title").not().isEmpty().withMessage(MSG_TITLE_REQUIRED),
-    body("location").not().isEmpty().withMessage(MSG_LOCATION_REQUIRED),
-    body("price").isNumeric().withMessage(MSG_PRICE_MUST_BE_NUMBER),
-    body("phone").isNumeric().withMessage(MSG_PHONE_MUST_BE_NUMBER),
-    body("useWhatsApp")
-      .isBoolean()
-      .withMessage(MSG_USE_WHATSAPP_BOOLEAN),
+    body("title").not().isEmpty().withMessage(ERROR_TITLE_REQUIRED),
+    body("location").not().isEmpty().withMessage(ERROR_LOCATION_REQUIRED),
+    body("price").not().isEmpty().withMessage(ERROR_PRICE_REQUIRED),
+    body("price").isNumeric().withMessage(ERROR_PRICE_MUST_BE_NUMBER),
+    body("phone").not().isEmpty().withMessage(ERROR_PHONE_REQUIRED),
+    body("phone").isNumeric().withMessage(ERROR_PHONE_MUST_BE_NUMBER),
+    body("useWhatsApp").isBoolean().withMessage(ERROR_USE_WHATSAPP_BOOLEAN),
   ],
   async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return next(getBusinessErrorResponse(ERROR_VALIDATION_FAILED, errors.array()));
+      return next(getBusinessErrorResponse(errors.array()[0].msg));
     }
 
     const { title, location, photos, price, phone, useWhatsApp } = req.body;
@@ -55,16 +56,14 @@ router.post(
       });
 
       await newListing.save();
-      res
-        .status(201)
-        .json(
-          buildSuccessResponse({
-            data: { listing: newListing },
-            message: SUCCESS_LISTING_CREATED,
-          })
-        );
+      res.status(201).json(
+        buildSuccessResponse({
+          data: { listing: newListing },
+          message: SUCCESS_LISTING_CREATED,
+        })
+      );
     } catch (error) {
-      next(error);  // Pass the error to the error handling middleware
+      next(error); // Pass the error to the error handling middleware
     }
   }
 );
