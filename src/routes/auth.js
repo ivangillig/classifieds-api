@@ -4,10 +4,22 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { authenticateUser } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
+import {
+  getServerErrorResponse,
+  getNotFoundErrorResponse,
+  getBusinessErrorResponse,
+  buildSuccessResponse,
+} from "../utils/responseUtils.js";
 
 dotenv.config();
 
 const router = express.Router();
+
+// Error messages
+const ERROR_FAILED_LOGOUT = "ERROR_FAILED_LOGOUT";
+const ERROR_INVALID_TOKEN_OR_USER_ID = "ERROR_INVALID_TOKEN_OR_USER_ID";
+const ERROR_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND";
+const ERROR_RETRIEVING_USER_DATA = "ERROR_RETRIEVING_USER_DATA";
 
 // @desc    Auth with Google
 // @route   GET /auth/google
@@ -32,39 +44,34 @@ router.get(
 
 // @desc    Logout user
 // @route   POST /auth/logout
-router.post("/logout", (req, res) => {
+router.post("/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) {
-      return next(err);
+      return next(getServerErrorResponse(ERROR_FAILED_LOGOUT, err));
     }
-    res.status(200).json({ message: "Logout successful" });
+    res.status(200).json(buildSuccessResponse({ message: "Logout successful" }));
   });
 });
 
-// @desc    Obtener la información completa del usuario
+// @desc    Get complete user information
 // @route   GET /auth/getUserInfo
-router.get("/getUserInfo", authenticateUser, async (req, res) => {
+router.get("/getUserInfo", authenticateUser, async (req, res, next) => {
   try {
     // Ensure the decoded JWT contains a user ID
     if (!req.user || !req.user.id) {
-      return res
-        .status(400)
-        .json({ message: "Invalid token or user ID missing" });
+      throw getBusinessErrorResponse(ERROR_INVALID_TOKEN_OR_USER_ID);
     }
 
     // Find user by ID (decoded from JWT)
-    const user = await User.findById(req.user.id).select(
-      "displayName email profilePhoto"
-    );
+    const user = await User.findById(req.user.id).select("displayName email profilePhoto");
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      throw getNotFoundErrorResponse(ERROR_USER_NOT_FOUND);
     }
-    res.json(user);
+
+    res.status(200).json(buildSuccessResponse({ data: { user } }));
+
   } catch (error) {
-    console.error("Error retrieving user data:", error);
-    res
-      .status(500)
-      .json({ message: "Error retrieving user data", error: error.message });
+    next(error);  // Pass the error to the error handling middleware
   }
 });
 

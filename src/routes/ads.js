@@ -3,25 +3,42 @@ import dotenv from "dotenv";
 import Listing from "../models/Listing.js";
 import { authenticateUser } from "../middleware/authMiddleware.js";
 import { body, validationResult } from "express-validator";
+import {
+  getBusinessErrorResponse,
+  buildSuccessResponse,
+} from "../utils/responseUtils.js";
 
 dotenv.config();
 
 const router = express.Router();
 
+// Error messages
+const ERROR_VALIDATION_FAILED = "ERROR_VALIDATION_FAILED";
+const SUCCESS_LISTING_CREATED = "SUCCESS_LISTING_CREATED";
+
+// Validation messages
+const MSG_TITLE_REQUIRED = "MSG_TITLE_REQUIRED";
+const MSG_LOCATION_REQUIRED = "MSG_LOCATION_REQUIRED";
+const MSG_PRICE_MUST_BE_NUMBER = "MSG_PRICE_MUST_BE_NUMBER";
+const MSG_PHONE_MUST_BE_NUMBER = "MSG_PHONE_MUST_BE_NUMBER";
+const MSG_USE_WHATSAPP_BOOLEAN = "MSG_USE_WHATSAPP_BOOLEAN";
+
 router.post(
   "/createListing",
-  authenticateUser, // Middleware to validate that user is logged
+  authenticateUser, // Middleware to validate that user is logged in
   [
-    body("title").not().isEmpty().withMessage("Title is required"),
-    body("location").not().isEmpty().withMessage("Location is required"),
-    body("price").isNumeric().withMessage("Price must be a number"),
-    body("phone").isNumeric().withMessage("Phone must be a number"),
-    body("useWhatsApp").isBoolean().withMessage("UseWhatsApp must be a boolean"),
+    body("title").not().isEmpty().withMessage(MSG_TITLE_REQUIRED),
+    body("location").not().isEmpty().withMessage(MSG_LOCATION_REQUIRED),
+    body("price").isNumeric().withMessage(MSG_PRICE_MUST_BE_NUMBER),
+    body("phone").isNumeric().withMessage(MSG_PHONE_MUST_BE_NUMBER),
+    body("useWhatsApp")
+      .isBoolean()
+      .withMessage(MSG_USE_WHATSAPP_BOOLEAN),
   ],
-  async (req, res) => {
+  async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return next(getBusinessErrorResponse(ERROR_VALIDATION_FAILED, errors.array()));
     }
 
     const { title, location, photos, price, phone, useWhatsApp } = req.body;
@@ -40,9 +57,14 @@ router.post(
       await newListing.save();
       res
         .status(201)
-        .json({ message: "Listing created successfully", listing: newListing });
+        .json(
+          buildSuccessResponse({
+            data: { listing: newListing },
+            message: SUCCESS_LISTING_CREATED,
+          })
+        );
     } catch (error) {
-      res.status(500).json({ error: "Server error" });
+      next(error);  // Pass the error to the error handling middleware
     }
   }
 );

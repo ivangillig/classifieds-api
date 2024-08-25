@@ -30,10 +30,12 @@
     "express-session": "^1.18.0",
     "express-validator": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
+    "log4js": "^6.9.1",
     "mongodb": "^6.8.0",
     "mongoose": "^8.4.1",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "verror": "^1.10.1"
   },
   "devDependencies": {
     "@eslint/compat": "^1.0.3",
