@@ -16,6 +16,7 @@ router.post(
     body("location").not().isEmpty().withMessage("Location is required"),
     body("price").isNumeric().withMessage("Price must be a number"),
     body("phone").isNumeric().withMessage("Phone must be a number"),
+    body("useWhatsApp").isBoolean().withMessage("UseWhatsApp must be a boolean"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -23,7 +24,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, location, photos, price, phone } = req.body;
+    const { title, location, photos, price, phone, useWhatsApp } = req.body;
 
     try {
       const newListing = new Listing({
@@ -32,6 +33,7 @@ router.post(
         photos,
         price,
         phone,
+        useWhatsApp,
         userId: req.user.id,
       });
 

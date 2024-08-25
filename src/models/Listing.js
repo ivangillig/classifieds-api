@@ -26,6 +26,10 @@ const ListingSchema = new Schema({
     type: String,
     required: true,
   },
+  useWhatsApp: {
+    type: Boolean,
+    default: false,
+  },
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User",
