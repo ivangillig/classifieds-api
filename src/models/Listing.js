@@ -8,12 +8,9 @@ const ListingSchema = new Schema({
     type: String,
     required: true,
   },
-  province: {
-    type: String,
-    required: true,
-  },
-  city: {
-    type: String,
+  location: {
+    type: Schema.Types.ObjectId,
+    ref: "Location",
     required: true,
   },
   photos: [

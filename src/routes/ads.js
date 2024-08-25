@@ -13,8 +13,7 @@ router.post(
   authenticateUser, // Middleware to validate that user is logged
   [
     body("title").not().isEmpty().withMessage("Title is required"),
-    body("province").not().isEmpty().withMessage("Province is required"),
-    body("city").not().isEmpty().withMessage("City is required"),
+    body("location").not().isEmpty().withMessage("Location is required"),
     body("price").isNumeric().withMessage("Price must be a number"),
     body("phone").isNumeric().withMessage("Phone must be a number"),
   ],
@@ -24,13 +23,12 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, province, city, photos, price, phone } = req.body;
+    const { title, location, photos, price, phone } = req.body;
 
     try {
       const newListing = new Listing({
         title,
-        province,
-        city,
+        location,
         photos,
         price,
         phone,
