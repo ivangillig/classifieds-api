@@ -26,8 +26,8 @@ router.post(
   "/createListing",
   authenticateUser, // Middleware to validate that user is logged in
   [
-    body("title").not().isEmpty().withMessage(ERROR_TITLE_REQUIRED),
     body("location").not().isEmpty().withMessage(ERROR_LOCATION_REQUIRED),
+    body("title").not().isEmpty().withMessage(ERROR_TITLE_REQUIRED),
     body("price")
       .not()
       .isEmpty()

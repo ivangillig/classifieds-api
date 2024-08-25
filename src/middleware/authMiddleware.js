@@ -6,8 +6,8 @@ import {
 } from "../utils/responseUtils.js";
 import {
   ERROR_INVALID_TOKEN,
-  ERROR_USER_NOT_FOUND
-} from '../constants/messages.js'
+  ERROR_USER_NOT_FOUND,
+} from "../constants/messages.js";
 
 // Middleware to authenticate a token without verifying the user
 export const authenticateToken = (req, res, next) => {
@@ -33,7 +33,15 @@ export const authenticateToken = (req, res, next) => {
 
 // Middleware to authenticate a token and verify the user
 export const authenticateUser = async (req, res, next) => {
-  const token = req.header("Authorization").replace("Bearer ", "");
+  const authHeader = req.header("Authorization");
+  
+  if (!authHeader) {
+    return res
+      .status(401)
+      .json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
+  }
+
+  const token = authHeader.replace("Bearer ", "");
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
