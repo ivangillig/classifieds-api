@@ -7,22 +7,20 @@ import {
   getBusinessErrorResponse,
   buildSuccessResponse,
 } from "../utils/responseUtils.js";
+import {
+  SUCCESS_LISTING_CREATED,
+  ERROR_TITLE_REQUIRED,
+  ERROR_LOCATION_REQUIRED,
+  ERROR_PRICE_REQUIRED,
+  ERROR_PRICE_MUST_BE_NUMBER,
+  ERROR_PHONE_MUST_BE_NUMBER,
+  ERROR_PHONE_REQUIRED,
+  ERROR_USE_WHATSAPP_BOOLEAN,
+} from "../constants/messages.js";
 
 dotenv.config();
 
 const router = express.Router();
-
-// Error messages
-const SUCCESS_LISTING_CREATED = "SUCCESS_LISTING_CREATED";
-
-// Validation messages
-const ERROR_TITLE_REQUIRED = "ERROR_TITLE_REQUIRED";
-const ERROR_LOCATION_REQUIRED = "ERROR_LOCATION_REQUIRED";
-const ERROR_PRICE_REQUIRED = "ERROR_PRICE_REQUIRED";
-const ERROR_PRICE_MUST_BE_NUMBER = "ERROR_PRICE_MUST_BE_NUMBER";
-const ERROR_PHONE_MUST_BE_NUMBER = "ERROR_PHONE_MUST_BE_NUMBER";
-const ERROR_PHONE_REQUIRED = "ERROR_PHONE_REQUIRED";
-const ERROR_USE_WHATSAPP_BOOLEAN = "ERROR_USE_WHATSAPP_BOOLEAN";
 
 router.post(
   "/createListing",
@@ -30,10 +28,18 @@ router.post(
   [
     body("title").not().isEmpty().withMessage(ERROR_TITLE_REQUIRED),
     body("location").not().isEmpty().withMessage(ERROR_LOCATION_REQUIRED),
-    body("price").not().isEmpty().withMessage(ERROR_PRICE_REQUIRED),
-    body("price").isNumeric().withMessage(ERROR_PRICE_MUST_BE_NUMBER),
-    body("phone").not().isEmpty().withMessage(ERROR_PHONE_REQUIRED),
-    body("phone").isNumeric().withMessage(ERROR_PHONE_MUST_BE_NUMBER),
+    body("price")
+      .not()
+      .isEmpty()
+      .withMessage(ERROR_PRICE_REQUIRED)
+      .isNumeric()
+      .withMessage(ERROR_PRICE_MUST_BE_NUMBER),
+    body("phone")
+      .not()
+      .isEmpty()
+      .withMessage(ERROR_PHONE_REQUIRED)
+      .isNumeric()
+      .withMessage(ERROR_PHONE_MUST_BE_NUMBER),
     body("useWhatsApp").isBoolean().withMessage(ERROR_USE_WHATSAPP_BOOLEAN),
   ],
   async (req, res, next) => {

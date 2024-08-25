@@ -4,12 +4,13 @@ import {
   getServerErrorResponse,
   buildSuccessResponse,
 } from "../utils/responseUtils.js";
+import {
+  ERROR_RETRIEVING_CITIES,
+  ERROR_RETRIEVING_STATES
+} from '../constants/messages.js'
 
 const router = express.Router();
 
-// Error messages
-const ERROR_RETRIEVING_STATES = "ERROR_RETRIEVING_STATES";
-const ERROR_RETRIEVING_CITIES = "ERROR_RETRIEVING_CITIES";
 
 // @desc    Get all the subcountries (states/provinces) of Argentina
 // @route   GET /locations/states

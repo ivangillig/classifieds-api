@@ -4,10 +4,10 @@ import {
   getUnauthorizedErrorResponse,
   getNotFoundErrorResponse,
 } from "../utils/responseUtils.js";
-
-// Error messages
-const ERROR_INVALID_TOKEN = "ERROR_INVALID_TOKEN";
-const ERROR_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND";
+import {
+  ERROR_INVALID_TOKEN,
+  ERROR_USER_NOT_FOUND
+} from '../constants/messages.js'
 
 // Middleware to authenticate a token without verifying the user
 export const authenticateToken = (req, res, next) => {

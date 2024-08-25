@@ -10,16 +10,15 @@ import {
   getBusinessErrorResponse,
   buildSuccessResponse,
 } from "../utils/responseUtils.js";
+import {
+  ERROR_FAILED_LOGOUT,
+  ERROR_INVALID_TOKEN_OR_USER_ID,
+  ERROR_USER_NOT_FOUND,
+} from "../constants/messages.js";
 
 dotenv.config();
 
 const router = express.Router();
-
-// Error messages
-const ERROR_FAILED_LOGOUT = "ERROR_FAILED_LOGOUT";
-const ERROR_INVALID_TOKEN_OR_USER_ID = "ERROR_INVALID_TOKEN_OR_USER_ID";
-const ERROR_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND";
-const ERROR_RETRIEVING_USER_DATA = "ERROR_RETRIEVING_USER_DATA";
 
 // @desc    Auth with Google
 // @route   GET /auth/google
@@ -49,7 +48,9 @@ router.post("/logout", (req, res, next) => {
     if (err) {
       return next(getServerErrorResponse(ERROR_FAILED_LOGOUT, err));
     }
-    res.status(200).json(buildSuccessResponse({ message: "Logout successful" }));
+    res
+      .status(200)
+      .json(buildSuccessResponse({ message: "Logout successful" }));
   });
 });
 
@@ -63,15 +64,16 @@ router.get("/getUserInfo", authenticateUser, async (req, res, next) => {
     }
 
     // Find user by ID (decoded from JWT)
-    const user = await User.findById(req.user.id).select("displayName email profilePhoto");
+    const user = await User.findById(req.user.id).select(
+      "displayName email profilePhoto"
+    );
     if (!user) {
       throw getNotFoundErrorResponse(ERROR_USER_NOT_FOUND);
     }
 
     res.status(200).json(buildSuccessResponse({ data: { user } }));
-
   } catch (error) {
-    next(error);  // Pass the error to the error handling middleware
+    next(error); // Pass the error to the error handling middleware
   }
 });
 
