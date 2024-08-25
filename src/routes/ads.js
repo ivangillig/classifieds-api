@@ -1,17 +1,16 @@
 import express from "express";
 import dotenv from "dotenv";
 import Listing from "../models/Listing.js";
-import authenticateUser from "../middleware/authMiddleware.js";
+import { authenticateUser } from "../middleware/authMiddleware.js";
 import { body, validationResult } from "express-validator";
 
 dotenv.config();
 
 const router = express.Router();
 
-// Ruta para crear un nuevo listing
 router.post(
   "/createListing",
-  authenticateUser, // Middleware para validar que el usuario está autenticado
+  authenticateUser, // Middleware to validate that user is logged
   [
     body("title").not().isEmpty().withMessage("Title is required"),
     body("province").not().isEmpty().withMessage("Province is required"),
