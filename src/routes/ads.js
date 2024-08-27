@@ -16,6 +16,7 @@ import {
   ERROR_PHONE_MUST_BE_NUMBER,
   ERROR_PHONE_REQUIRED,
   ERROR_USE_WHATSAPP_BOOLEAN,
+  ERROR_LISTINGS_FETCH_FAILED,
 } from "../constants/messages.js";
 
 dotenv.config();
@@ -73,5 +74,34 @@ router.post(
     }
   }
 );
+
+// Route to fetch listings with location filter
+router.get("/listings", async (req, res, next) => {
+  const { location } = req.query;
+
+  const filters = {};
+
+  if (location) {
+    // Assuming location can be either a subcountry (state/province) or a city name
+    filters.$or = [
+      { "location.subcountry": new RegExp(location, "i") }, // Match subcountry
+      { "location.name": new RegExp(location, "i") }, // Match city name
+    ];
+  }
+
+  try {
+    const listings = await Listing.find(filters)
+      .populate("location", "name subcountry country")
+      .exec();
+
+      console.log(listings)
+
+    res.status(200).json(buildSuccessResponse({ data: listings }));
+  } catch (error) {
+    console.error(ERROR_LISTINGS_FETCH_FAILED, error);
+    next(error); // Pass the error to the error handling middleware
+  }
+});
+
 
 export default router;
