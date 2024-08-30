@@ -1,11 +1,13 @@
 import express from "express";
 import dotenv from "dotenv";
 import Listing from "../models/Listing.js";
+import Location from "../models/Location.js";
 import { authenticateUser } from "../middleware/authMiddleware.js";
 import { body, validationResult } from "express-validator";
 import {
   getBusinessErrorResponse,
   buildSuccessResponse,
+  getServerErrorResponse,
 } from "../utils/responseUtils.js";
 import {
   SUCCESS_LISTING_CREATED,
@@ -77,31 +79,28 @@ router.post(
 
 // Route to fetch listings with location filter
 router.get("/listings", async (req, res, next) => {
-  const { location } = req.query;
-
-  const filters = {};
-
-  if (location) {
-    // Assuming location can be either a subcountry (state/province) or a city name
-    filters.$or = [
-      { "location.subcountry": new RegExp(location, "i") }, // Match subcountry
-      { "location.name": new RegExp(location, "i") }, // Match city name
-    ];
-  }
+  const { province } = req.query;
 
   try {
-    const listings = await Listing.find(filters)
-      .populate("location", "name subcountry country")
-      .exec();
+    // First, find all locations that match the province name
+    const locations = await Location.find({
+      $or: [
+        { subcountry: new RegExp(province, "i") }, // Match subcountry (province/state)
+        { name: new RegExp(province, "i") } // Match city name
+      ]
+    }).select('_id'); // Only select the IDs
 
-      console.log(listings)
+    // Then, find all listings that reference these locations
+    const listings = await Listing.find({
+      location: { $in: locations.map(location => location._id) }
+    }).populate("location", "name subcountry country");
 
+    // Return the listings with populated location data
     res.status(200).json(buildSuccessResponse({ data: listings }));
   } catch (error) {
     console.error(ERROR_LISTINGS_FETCH_FAILED, error);
-    next(error); // Pass the error to the error handling middleware
+    next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error));
   }
 });
-
 
 export default router;
