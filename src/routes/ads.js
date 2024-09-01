@@ -1,5 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
+import multer from "multer";
+import crypto from "crypto";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import Listing from "../models/Listing.js";
 import Location from "../models/Location.js";
 import { authenticateUser } from "../middleware/authMiddleware.js";
@@ -19,15 +24,76 @@ import {
   ERROR_PHONE_REQUIRED,
   ERROR_USE_WHATSAPP_BOOLEAN,
   ERROR_LISTINGS_FETCH_FAILED,
+  ERROR_UPLOAD_FAILED,
+  ERROR_DELETE_IMAGES_FAILED,
+  SUCCESS_IMAGES_DELETED,
 } from "../constants/messages.js";
 
 dotenv.config();
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Multer configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // Directory where images will be stored
+  },
+  filename: (req, file, cb) => {
+    // Generate a unique filename using a hash
+    const uniqueSuffix = crypto.randomBytes(6).toString("hex");
+    const extension = path.extname(file.originalname);
+    cb(null, `${uniqueSuffix}${extension}`);
+  },
+});
+
+const upload = multer({ storage });
+
+// Route to upload images
+router.post(
+  "/upload",
+  authenticateUser,
+  upload.array("photos", 5),
+  async (req, res, next) => {
+    try {
+      const uploadedFiles = req.files.map((file) => `${file.filename}`);
+      res.status(200).json(buildSuccessResponse({ data: uploadedFiles }));
+    } catch (error) {
+      next(getServerErrorResponse(ERROR_UPLOAD_FAILED, error));
+    }
+  }
+);
+
+// Route to delete images
+router.post("/deleteImages", async (req, res) => {
+  const { urls } = req.body;
+
+  try {
+    urls.forEach((filename) => {
+      // Construct the full path of the file on the server
+      const filePath = path.join(__dirname, "../..", "uploads", filename);
+
+      // Check if the file exists and then delete it
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath); // Delete the file
+      }
+    });
+
+    res
+      .status(200)
+      .json(buildSuccessResponse({ message: SUCCESS_IMAGES_DELETED }));
+  } catch (error) {
+    res
+      .status(500)
+      .json(getServerErrorResponse(ERROR_DELETE_IMAGES_FAILED, error));
+  }
+});
+
+// Route to create a listing
 router.post(
   "/createListing",
-  authenticateUser, // Middleware to validate that user is logged in
+  authenticateUser, // Middleware to validate that the user is logged in
   [
     body("location").not().isEmpty().withMessage(ERROR_LOCATION_REQUIRED),
     body("title").not().isEmpty().withMessage(ERROR_TITLE_REQUIRED),
@@ -82,17 +148,17 @@ router.get("/listings", async (req, res, next) => {
   const { province } = req.query;
 
   try {
-    // First, find all locations that match the province name
+    // Find all locations that match the province name
     const locations = await Location.find({
       $or: [
         { subcountry: new RegExp(province, "i") }, // Match subcountry (province/state)
-        { name: new RegExp(province, "i") } // Match city name
-      ]
-    }).select('_id'); // Only select the IDs
+        { name: new RegExp(province, "i") }, // Match city name
+      ],
+    }).select("_id"); // Only select the IDs
 
-    // Then, find all listings that reference these locations
+    // Find all listings that reference these locations
     const listings = await Listing.find({
-      location: { $in: locations.map(location => location._id) }
+      location: { $in: locations.map((location) => location._id) },
     }).populate("location", "name subcountry country");
 
     // Return the listings with populated location data
