@@ -7,8 +7,13 @@ import "./config/passport.js";
 import routes from "./routes/index.js";
 import dotenv from "dotenv";
 import errorHandler from "./middleware/errorHandler.js";
+import path from "path";
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -23,6 +28,8 @@ app.use(
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Session configuration
 app.use(
