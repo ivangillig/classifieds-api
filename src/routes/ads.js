@@ -38,10 +38,14 @@ const __dirname = path.dirname(__filename);
 // Multer configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Directory where images will be stored
+    const uploadPath = path.join(__dirname, "../../uploads"); // absolute route
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true }); // Create folder if it doesn't exist
+    }
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    // Generate a unique filename using a hash
+    // Create a unique name for file
     const uniqueSuffix = crypto.randomBytes(6).toString("hex");
     const extension = path.extname(file.originalname);
     cb(null, `${uniqueSuffix}${extension}`);
@@ -57,7 +61,10 @@ router.post(
   upload.array("photos", 5),
   async (req, res, next) => {
     try {
-      const uploadedFiles = req.files.map((file) => `${file.filename}`);
+      const uploadedFiles = req.files.map((file) => {
+        const path = `${file.filename}`;
+        return path;
+      });
       res.status(200).json(buildSuccessResponse({ data: uploadedFiles }));
     } catch (error) {
       next(getServerErrorResponse(ERROR_UPLOAD_FAILED, error));
