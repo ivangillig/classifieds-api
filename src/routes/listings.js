@@ -27,6 +27,8 @@ import {
   ERROR_UPLOAD_FAILED,
   ERROR_DELETE_IMAGES_FAILED,
   SUCCESS_IMAGES_DELETED,
+  ERROR_LISTING_NOT_FOUND,
+  ERROR_LISTING_FETCH_FAILED
 } from "../constants/messages.js";
 
 dotenv.config();
@@ -190,14 +192,14 @@ router.get("/:id", async (req, res, next) => {
     if (!listing) {
       return res
         .status(404)
-        .json(getBusinessErrorResponse("Listing not found"));
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
     }
 
     // Return the listing data
     res.status(200).json(buildSuccessResponse({ data: listing }));
   } catch (error) {
-    console.error("Error fetching listing by ID:", error);
-    next(getServerErrorResponse("Failed to fetch listing", error));
+    console.error(ERROR_LISTING_FETCH_FAILED, error);
+    next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error));
   }
 });
 
