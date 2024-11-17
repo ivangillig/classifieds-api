@@ -151,7 +151,7 @@ router.post(
 );
 
 // Route to fetch listings with location filter
-router.get("/listings", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   const { province } = req.query;
 
   try {
@@ -173,6 +173,31 @@ router.get("/listings", async (req, res, next) => {
   } catch (error) {
     console.error(ERROR_LISTINGS_FETCH_FAILED, error);
     next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error));
+  }
+});
+
+// Route to fetch a specific listing by ID
+router.get("/:id", async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    // Fetch the listing by ID and populate related fields
+    const listing = await Listing.findById(id).populate(
+      "location",
+      "name subcountry country"
+    );
+
+    if (!listing) {
+      return res
+        .status(404)
+        .json(getBusinessErrorResponse("Listing not found"));
+    }
+
+    // Return the listing data
+    res.status(200).json(buildSuccessResponse({ data: listing }));
+  } catch (error) {
+    console.error("Error fetching listing by ID:", error);
+    next(getServerErrorResponse("Failed to fetch listing", error));
   }
 });
 
