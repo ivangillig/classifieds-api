@@ -14,6 +14,7 @@ import {
 import { body } from "express-validator";
 import {
   ERROR_TITLE_REQUIRED,
+  ERROR_AGE_REQUIRED,
   ERROR_LOCATION_REQUIRED,
   ERROR_PRICE_REQUIRED,
   ERROR_PRICE_MUST_BE_NUMBER,
@@ -36,6 +37,7 @@ router.post(
   [
     body("location").not().isEmpty().withMessage(ERROR_LOCATION_REQUIRED),
     body("title").not().isEmpty().withMessage(ERROR_TITLE_REQUIRED),
+    body("age").not().isEmpty().withMessage(ERROR_AGE_REQUIRED),
     body("price")
       .not()
       .isEmpty()

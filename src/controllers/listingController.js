@@ -73,11 +73,13 @@ export const createListing = async (req, res, next) => {
       return next(getBusinessErrorResponse(errors.array()[0].msg));
     }
   
-    const { title, location, photos, price, phone, useWhatsApp } = req.body;
+    const { title, age, description, location, photos, price, phone, useWhatsApp } = req.body;
   
     try {
       const newListing = await createNewListing({
         title,
+        age,
+        description,
         location,
         photos,
         price,

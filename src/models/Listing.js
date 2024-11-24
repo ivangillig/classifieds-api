@@ -8,6 +8,14 @@ const ListingSchema = new Schema({
     type: String,
     required: true,
   },
+  description: {
+    type: String,
+    required: false,
+  },
+  age: {
+    type: String,
+    required: true,
+  },
   location: {
     type: Schema.Types.ObjectId,
     ref: "Location",
