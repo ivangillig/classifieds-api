@@ -5,7 +5,7 @@ import { validationResult } from "express-validator";
 import {
   getListingsByLocation,
   getListingById,
-  createNewListing
+  createNewListing,
 } from "../services/listingService.js";
 import {
   buildSuccessResponse,
@@ -20,17 +20,33 @@ import {
 } from "../constants/messages.js";
 
 /**
- * Controller to fetch listings.
+ * Controller to fetch listings with pagination.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
  */
 export const fetchListings = async (req, res, next) => {
   const { province } = req.query;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit) || 12;
 
   try {
-    const listings = await getListingsByLocation(province);
-    res.status(200).json(buildSuccessResponse({ data: listings }));
+    const { listings, total } = await getListingsByLocation(
+      province,
+      page,
+      limit
+    );
+    res.status(200).json(
+      buildSuccessResponse({
+        data: listings,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      })
+    );
   } catch (error) {
     console.error(ERROR_LISTINGS_FETCH_FAILED, error);
     next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error));
@@ -68,34 +84,43 @@ export const fetchListingById = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const createListing = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return next(getBusinessErrorResponse(errors.array()[0].msg));
-    }
-  
-    const { title, age, description, location, photos, price, phone, useWhatsApp } = req.body;
-  
-    try {
-      const newListing = await createNewListing({
-        title,
-        age,
-        description,
-        location,
-        photos,
-        price,
-        phone,
-        useWhatsApp,
-        userId: req.user.id,
-      });
-  
-      res.status(201).json(
-        buildSuccessResponse({
-          data: { listing: newListing },
-          message: SUCCESS_LISTING_CREATED,
-        })
-      );
-    } catch (error) {
-      console.error(ERROR_LISTING_FETCH_FAILED, error);
-      next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error));
-    }
-  };
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(getBusinessErrorResponse(errors.array()[0].msg));
+  }
+
+  const {
+    title,
+    age,
+    description,
+    location,
+    photos,
+    price,
+    phone,
+    useWhatsApp,
+  } = req.body;
+
+  try {
+    const newListing = await createNewListing({
+      title,
+      age,
+      description,
+      location,
+      photos,
+      price,
+      phone,
+      useWhatsApp,
+      userId: req.user.id,
+    });
+
+    res.status(201).json(
+      buildSuccessResponse({
+        data: { listing: newListing },
+        message: SUCCESS_LISTING_CREATED,
+      })
+    );
+  } catch (error) {
+    console.error(ERROR_LISTING_FETCH_FAILED, error);
+    next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error));
+  }
+};

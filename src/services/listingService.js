@@ -9,12 +9,18 @@ import {
 } from "../constants/messages.js";
 
 /**
- * Fetch listings by province or city.
+ * Fetch listings by province or city with pagination.
  * @param {string} province - The name of the province or city to filter listings.
- * @returns {Promise<Array>} - A promise resolving to an array of listings.
+ * @param {number} page - The page number for pagination.
+ * @param {number} limit - The number of listings per page.
+ * @returns {Promise<Object>} - A promise resolving to an object containing listings and total count.
  */
-export const getListingsByLocation = async (province) => {
+export const getListingsByLocation = async (province, page = 1, limit = 10) => {
+
   try {
+    const skip = (page - 1) * limit;
+
+    // Find matching locations by province or city
     const locations = await Location.find({
       $or: [
         { subcountry: new RegExp(province, "i") },
@@ -22,9 +28,20 @@ export const getListingsByLocation = async (province) => {
       ],
     }).select("_id");
 
-    return await Listing.find({
-      location: { $in: locations.map((location) => location._id) },
-    }).populate("location", "name subcountry country");
+    // Fetch listings with pagination
+    const [listings, total] = await Promise.all([
+      Listing.find({
+        location: { $in: locations.map((location) => location._id) },
+      })
+        .populate("location", "name subcountry country")
+        .skip(skip)
+        .limit(limit),
+      Listing.countDocuments({
+        location: { $in: locations.map((location) => location._id) },
+      }),
+    ]);
+
+    return { listings, total };
   } catch (error) {
     throw new Error(ERROR_LISTINGS_FETCH_FAILED);
   }
