@@ -2,10 +2,14 @@
 
 import Listing from "../models/Listing.js";
 import Location from "../models/Location.js";
+import Report from "../models/Report.js";
+import { APPROVED_STATUS_FILTER } from "../utils/businessConstants.js";
+
 import {
   ERROR_LISTINGS_FETCH_FAILED,
   ERROR_LISTING_FETCH_FAILED,
   ERROR_LISTING_NOT_FOUND,
+  ERROR_REPORT_CREATION_FAILED,
 } from "../constants/messages.js";
 
 /**
@@ -31,6 +35,7 @@ export const getListingsByLocation = async (province, page = 1, limit = 10) => {
     // Fetch listings with pagination
     const [listings, total] = await Promise.all([
       Listing.find({
+        ...APPROVED_STATUS_FILTER,
         location: { $in: locations.map((location) => location._id) },
       })
         .populate("location", "name subcountry country")
@@ -84,5 +89,39 @@ export const createNewListing = async (listingData) => {
     return newListing;
   } catch (error) {
     throw new Error(ERROR_LISTING_FETCH_FAILED);
+  }
+};
+
+/**
+ * Create a new report for a listing.
+ * @param {Object} reportData - The data for the report.
+ * @returns {Promise<Object>} - A promise resolving to the created report.
+ */
+export const createReportForListing = async (reportData) => {
+  const { listingId, reason, additionalInfo, contactInfo } = reportData;
+
+  try {
+    // Check if listing exists
+    const listing = await Listing.findById(listingId);
+    if (!listing) {
+      throw new Error(ERROR_LISTING_NOT_FOUND);
+    }
+
+    // Create and save the report
+    const report = new Report({ listingId, reason, additionalInfo, contactInfo });
+    await report.save();
+
+    // Increment the report count on the listing
+    listing.reports = (listing.reports || 0) + 1;
+    await listing.save();
+
+    return report;
+  } catch (error) {
+    console.log(error);
+    
+    if (error.message === ERROR_LISTING_NOT_FOUND) {
+      throw error;
+    }
+    throw new Error(ERROR_REPORT_CREATION_FAILED);
   }
 };

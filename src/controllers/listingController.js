@@ -3,6 +3,7 @@
 import { validationResult } from "express-validator";
 
 import {
+  createReportForListing,
   getListingsByLocation,
   getListingById,
   createNewListing,
@@ -17,6 +18,8 @@ import {
   ERROR_LISTING_FETCH_FAILED,
   ERROR_LISTING_NOT_FOUND,
   SUCCESS_LISTING_CREATED,
+  ERROR_REPORT_CREATION_FAILED,
+  SUCCESS_REPORT_CREATED,
 } from "../constants/messages.js";
 
 /**
@@ -122,5 +125,40 @@ export const createListing = async (req, res, next) => {
   } catch (error) {
     console.error(ERROR_LISTING_FETCH_FAILED, error);
     next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error));
+  }
+};
+
+/**
+ * Controller to create a report for a listing.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+export const createReport = async (req, res, next) => {
+  const { listingId, reason, additionalInfo, contactInfo } = req.body;
+
+  try {
+    const report = await createReportForListing({
+      listingId,
+      reason,
+      additionalInfo,
+      contactInfo,
+    });
+
+    res.status(201).json(
+      buildSuccessResponse({
+        data: { report },
+        message: SUCCESS_REPORT_CREATED,
+      })
+    );
+  } catch (error) {
+    if (error.message === ERROR_LISTING_NOT_FOUND) {
+      return res
+        .status(404)
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+    }
+
+    console.error(ERROR_REPORT_CREATION_FAILED, error);
+    next(getServerErrorResponse(ERROR_REPORT_CREATION_FAILED, error));
   }
 };

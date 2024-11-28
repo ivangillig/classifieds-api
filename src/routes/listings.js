@@ -5,6 +5,7 @@ import {
   fetchListings,
   fetchListingById,
   createListing,
+  createReport,
 } from "../controllers/listingController.js";
 import {
   uploadImages,
@@ -21,6 +22,9 @@ import {
   ERROR_PHONE_MUST_BE_NUMBER,
   ERROR_PHONE_REQUIRED,
   ERROR_USE_WHATSAPP_BOOLEAN,
+  ERROR_REPORT_LISTING_ID_REQUIRED,
+  ERROR_REPORT_REASON_REQUIRED,
+  ERROR_REPORT_CONTACT_INFO_STRING,
 } from "../constants/messages.js";
 
 dotenv.config();
@@ -31,6 +35,18 @@ router.get("/", fetchListings);
 router.get("/:id", fetchListingById);
 router.post("/upload", authenticateUser, uploadImages);
 router.post("/deleteImages", deleteImagesController);
+router.post(
+  "/report",
+  [
+    body("listingId").notEmpty().withMessage(ERROR_REPORT_LISTING_ID_REQUIRED),
+    body("reason").notEmpty().withMessage(ERROR_REPORT_REASON_REQUIRED),
+    body("contactInfo")
+      .optional()
+      .isString()
+      .withMessage(ERROR_REPORT_CONTACT_INFO_STRING),
+  ],
+  createReport
+);
 router.post(
   "/createListing",
   authenticateUser,
