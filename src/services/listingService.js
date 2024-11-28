@@ -3,7 +3,7 @@
 import Listing from "../models/Listing.js";
 import Location from "../models/Location.js";
 import Report from "../models/Report.js";
-import { APPROVED_STATUS_FILTER } from "../utils/businessConstants.js";
+import { PUBLISHED_STATUS_FILTER } from "../utils/businessConstants.js";
 
 import {
   ERROR_LISTINGS_FETCH_FAILED,
@@ -35,7 +35,7 @@ export const getListingsByLocation = async (province, page = 1, limit = 10) => {
     // Fetch listings with pagination
     const [listings, total] = await Promise.all([
       Listing.find({
-        ...APPROVED_STATUS_FILTER,
+        ...PUBLISHED_STATUS_FILTER,
         location: { $in: locations.map((location) => location._id) },
       })
         .populate("location", "name subcountry country")

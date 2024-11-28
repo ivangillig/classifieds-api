@@ -1,1 +1,1 @@
-export const APPROVED_STATUS_FILTER = { status: "published" };
+export const PUBLISHED_STATUS_FILTER = { status: "published" };
