@@ -1,11 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
 import { authenticateUser } from "../middleware/authMiddleware.js";
+import { query } from "express-validator";
+
 import {
   fetchListings,
   fetchListingById,
   createListing,
   createReport,
+  fetchUserListings,
 } from "../controllers/listingController.js";
 import {
   uploadImages,
@@ -25,6 +28,7 @@ import {
   ERROR_REPORT_LISTING_ID_REQUIRED,
   ERROR_REPORT_REASON_REQUIRED,
   ERROR_REPORT_CONTACT_INFO_STRING,
+  ERROR_STATUS_MUST_BE_A_STRING,
 } from "../constants/messages.js";
 
 dotenv.config();
@@ -32,7 +36,6 @@ dotenv.config();
 const router = express.Router();
 
 router.get("/", fetchListings);
-router.get("/:id", fetchListingById);
 router.post("/upload", authenticateUser, uploadImages);
 router.post("/deleteImages", deleteImagesController);
 router.post(
@@ -70,5 +73,16 @@ router.post(
   ],
   createListing
 );
-
+router.get(
+  "/my-listings",
+  authenticateUser,
+  [
+    query("status")
+      .optional()
+      .isString()
+      .withMessage(ERROR_STATUS_MUST_BE_A_STRING),
+  ],
+  fetchUserListings
+);
+router.get("/:id", fetchListingById);
 export default router;

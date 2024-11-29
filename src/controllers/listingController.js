@@ -7,6 +7,7 @@ import {
   getListingsByLocation,
   getListingById,
   createNewListing,
+  getListingsByUser
 } from "../services/listingService.js";
 import {
   buildSuccessResponse,
@@ -160,5 +161,37 @@ export const createReport = async (req, res, next) => {
 
     console.error(ERROR_REPORT_CREATION_FAILED, error);
     next(getServerErrorResponse(ERROR_REPORT_CREATION_FAILED, error));
+  }
+};
+
+/**
+ * Controller to fetch listings of the authenticated user.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+export const fetchUserListings = async (req, res, next) => {  
+  const userId = req.user.id;
+  const { status } = req.query;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+
+  try {
+    const { listings, total } = await getListingsByUser(userId, status, page, limit);
+
+    res.status(200).json(
+      buildSuccessResponse({
+        data: listings,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      })
+    );
+  } catch (error) {
+    console.error(ERROR_LISTINGS_FETCH_FAILED, error);
+    next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error));
   }
 };

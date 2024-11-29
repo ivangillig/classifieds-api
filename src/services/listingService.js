@@ -20,7 +20,6 @@ import {
  * @returns {Promise<Object>} - A promise resolving to an object containing listings and total count.
  */
 export const getListingsByLocation = async (province, page = 1, limit = 10) => {
-
   try {
     const skip = (page - 1) * limit;
 
@@ -108,7 +107,12 @@ export const createReportForListing = async (reportData) => {
     }
 
     // Create and save the report
-    const report = new Report({ listingId, reason, additionalInfo, contactInfo });
+    const report = new Report({
+      listingId,
+      reason,
+      additionalInfo,
+      contactInfo,
+    });
     await report.save();
 
     // Increment the report count on the listing
@@ -118,10 +122,46 @@ export const createReportForListing = async (reportData) => {
     return report;
   } catch (error) {
     console.log(error);
-    
+
     if (error.message === ERROR_LISTING_NOT_FOUND) {
       throw error;
     }
     throw new Error(ERROR_REPORT_CREATION_FAILED);
+  }
+};
+
+/**
+ * Fetch listings by user with optional status filter.
+ * @param {string} userId - The ID of the authenticated user.
+ * @param {string} status - Optional status to filter listings (e.g., "published").
+ * @param {number} page - The page number for pagination.
+ * @param {number} limit - The number of listings per page.
+ * @returns {Promise<Object>} - A promise resolving to an object containing listings and total count.
+ */
+export const getListingsByUser = async (
+  userId,
+  status,
+  page = 1,
+  limit = 10
+) => {
+  try {
+    const skip = (page - 1) * limit;
+
+    // Dinamic filter
+    const filter = { userId };
+    if (status) filter.status = status;
+
+    // Find listings
+    const [listings, total] = await Promise.all([
+      Listing.find(filter)
+        .populate("location", "name subcountry country")
+        .skip(skip)
+        .limit(limit),
+      Listing.countDocuments(filter),
+    ]);
+
+    return { listings, total };
+  } catch (error) {
+    throw new Error(ERROR_LISTINGS_FETCH_FAILED);
   }
 };
