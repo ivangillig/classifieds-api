@@ -1,13 +1,13 @@
 // src/controllers/listingController.js
 
 import { validationResult } from "express-validator";
-
 import {
   createReportForListing,
   getListingsByLocation,
   getListingById,
   createNewListing,
-  getListingsByUser
+  getListingsByUser,
+  pauseListingService,
 } from "../services/listingService.js";
 import {
   buildSuccessResponse,
@@ -21,6 +21,8 @@ import {
   SUCCESS_LISTING_CREATED,
   ERROR_REPORT_CREATION_FAILED,
   SUCCESS_REPORT_CREATED,
+  ERROR_LISTING_PAUSE_FAILED,
+  SUCCESS_LISTING_PAUSED,
 } from "../constants/messages.js";
 
 /**
@@ -170,14 +172,19 @@ export const createReport = async (req, res, next) => {
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
  */
-export const fetchUserListings = async (req, res, next) => {  
+export const fetchUserListings = async (req, res, next) => {
   const userId = req.user.id;
   const { status } = req.query;
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
   try {
-    const { listings, total } = await getListingsByUser(userId, status, page, limit);
+    const { listings, total } = await getListingsByUser(
+      userId,
+      status,
+      page,
+      limit
+    );
 
     res.status(200).json(
       buildSuccessResponse({
@@ -193,5 +200,32 @@ export const fetchUserListings = async (req, res, next) => {
   } catch (error) {
     console.error(ERROR_LISTINGS_FETCH_FAILED, error);
     next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error));
+  }
+};
+
+/**
+ * Controller to pause a listing.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+export const pauseListing = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const updatedListing = await pauseListingService(id, req.user.id);
+
+    if (!updatedListing) {
+      return res
+        .status(404)
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+    }
+
+    res
+      .status(200)
+      .json(buildSuccessResponse({ message: SUCCESS_LISTING_PAUSED }));
+  } catch (error) {
+    console.error(ERROR_LISTING_PAUSE_FAILED, error);
+    next(getServerErrorResponse(ERROR_LISTING_PAUSE_FAILED, error));
   }
 };

@@ -3,13 +3,14 @@
 import Listing from "../models/Listing.js";
 import Location from "../models/Location.js";
 import Report from "../models/Report.js";
-import { PUBLISHED_STATUS_FILTER } from "../utils/businessConstants.js";
+import { PUBLISHED_STATUS_FILTER, STATUS } from "../utils/businessConstants.js";
 
 import {
   ERROR_LISTINGS_FETCH_FAILED,
   ERROR_LISTING_FETCH_FAILED,
   ERROR_LISTING_NOT_FOUND,
   ERROR_REPORT_CREATION_FAILED,
+  ERROR_LISTING_PAUSE_FAILED,
 } from "../constants/messages.js";
 
 /**
@@ -163,5 +164,25 @@ export const getListingsByUser = async (
     return { listings, total };
   } catch (error) {
     throw new Error(ERROR_LISTINGS_FETCH_FAILED);
+  }
+};
+
+/**
+ * Service to pause a listing.
+ * @param {string} listingId - The ID of the listing to pause.
+ * @param {string} userId - The ID of the user making the request.
+ * @returns {Promise<Object>} - A promise resolving to the updated listing.
+ */
+export const pauseListingService = async (listingId, userId) => {
+  try {
+    const listing = await Listing.findOneAndUpdate(
+      { _id: listingId, userId },
+      { status: STATUS.PAUSED },
+      { new: true }
+    );
+
+    return listing;
+  } catch (error) {
+    throw new Error(ERROR_LISTING_PAUSE_FAILED);
   }
 };
