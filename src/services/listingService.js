@@ -10,7 +10,7 @@ import {
   ERROR_LISTING_FETCH_FAILED,
   ERROR_LISTING_NOT_FOUND,
   ERROR_REPORT_CREATION_FAILED,
-  ERROR_LISTING_PAUSE_FAILED,
+  ERROR_LISTING_STATUS_UPDATE_FAILED,
 } from "../constants/messages.js";
 
 /**
@@ -168,21 +168,28 @@ export const getListingsByUser = async (
 };
 
 /**
- * Service to pause a listing.
+ * Service to pause or reactivate a listing.
  * @param {string} listingId - The ID of the listing to pause.
  * @param {string} userId - The ID of the user making the request.
  * @returns {Promise<Object>} - A promise resolving to the updated listing.
  */
-export const pauseListingService = async (listingId, userId) => {
+export const toggleListingStatusService = async (listingId, userId) => {
   try {
-    const listing = await Listing.findOneAndUpdate(
+    const listing = await Listing.findOne({ _id: listingId, userId });
+
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+
+    const newStatus =
+      listing.status === STATUS.PAUSED ? STATUS.PUBLISHED : STATUS.PAUSED;
+
+    const updatedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
-      { status: STATUS.PAUSED },
+      { status: newStatus },
       { new: true }
     );
 
-    return listing;
+    return updatedListing;
   } catch (error) {
-    throw new Error(ERROR_LISTING_PAUSE_FAILED);
+    throw new Error(ERROR_LISTING_STATUS_UPDATE_FAILED);
   }
 };

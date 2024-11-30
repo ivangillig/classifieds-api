@@ -9,7 +9,7 @@ import {
   createListing,
   createReport,
   fetchUserListings,
-  pauseListing,
+  toggleListingStatus,
 } from "../controllers/listingController.js";
 import {
   uploadImages,
@@ -85,6 +85,6 @@ router.get(
   ],
   fetchUserListings
 );
-router.patch("/:id/pause", authenticateUser, pauseListing);
+router.patch("/:id/toggle-status", authenticateUser, toggleListingStatus);
 router.get("/:id", fetchListingById);
 export default router;

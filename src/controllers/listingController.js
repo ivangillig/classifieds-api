@@ -7,7 +7,7 @@ import {
   getListingById,
   createNewListing,
   getListingsByUser,
-  pauseListingService,
+  toggleListingStatusService,
 } from "../services/listingService.js";
 import {
   buildSuccessResponse,
@@ -21,7 +21,7 @@ import {
   SUCCESS_LISTING_CREATED,
   ERROR_REPORT_CREATION_FAILED,
   SUCCESS_REPORT_CREATED,
-  ERROR_LISTING_PAUSE_FAILED,
+  SUCCESS_LISTING_REACTIVATED,
   SUCCESS_LISTING_PAUSED,
 } from "../constants/messages.js";
 
@@ -204,28 +204,28 @@ export const fetchUserListings = async (req, res, next) => {
 };
 
 /**
- * Controller to pause a listing.
+ * Controller to pause or reactivate a listing.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
  */
-export const pauseListing = async (req, res, next) => {
-  const { id } = req.params;
+export const toggleListingStatus = async (req, res, next) => {
+  const { id: listingId } = req.params;
+  const userId = req.user.id;
 
   try {
-    const updatedListing = await pauseListingService(id, req.user.id);
+    const updatedListing = await toggleListingStatusService(listingId, userId);
 
-    if (!updatedListing) {
-      return res
-        .status(404)
-        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
-    }
-
-    res
-      .status(200)
-      .json(buildSuccessResponse({ message: SUCCESS_LISTING_PAUSED }));
+    res.status(200).json(
+      buildSuccessResponse({
+        data: updatedListing,
+        message:
+          updatedListing.status === "paused"
+            ? SUCCESS_LISTING_PAUSED
+            : SUCCESS_LISTING_REACTIVATED,
+      })
+    );
   } catch (error) {
-    console.error(ERROR_LISTING_PAUSE_FAILED, error);
-    next(getServerErrorResponse(ERROR_LISTING_PAUSE_FAILED, error));
+    next(error);
   }
 };
