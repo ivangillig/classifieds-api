@@ -10,6 +10,7 @@ import {
   createReport,
   fetchUserListings,
   toggleListingStatus,
+  deleteListing,
 } from "../controllers/listingController.js";
 import {
   uploadImages,
@@ -86,5 +87,6 @@ router.get(
   fetchUserListings
 );
 router.patch("/:id/toggle-status", authenticateUser, toggleListingStatus);
+router.delete("/:id", authenticateUser, deleteListing);
 router.get("/:id", fetchListingById);
 export default router;

@@ -11,6 +11,7 @@ import {
   ERROR_LISTING_NOT_FOUND,
   ERROR_REPORT_CREATION_FAILED,
   ERROR_LISTING_STATUS_UPDATE_FAILED,
+  ERROR_LISTING_DELETE_FAILED,
 } from "../constants/messages.js";
 
 /**
@@ -36,6 +37,7 @@ export const getListingsByLocation = async (province, page = 1, limit = 10) => {
     const [listings, total] = await Promise.all([
       Listing.find({
         ...PUBLISHED_STATUS_FILTER,
+        isDeleted: false,
         location: { $in: locations.map((location) => location._id) },
       })
         .populate("location", "name subcountry country")
@@ -149,7 +151,7 @@ export const getListingsByUser = async (
     const skip = (page - 1) * limit;
 
     // Dinamic filter
-    const filter = { userId };
+    const filter = { userId, isDeleted: false };
     if (status) filter.status = status;
 
     // Find listings
@@ -191,5 +193,30 @@ export const toggleListingStatusService = async (listingId, userId) => {
     return updatedListing;
   } catch (error) {
     throw new Error(ERROR_LISTING_STATUS_UPDATE_FAILED);
+  }
+};
+
+/**
+ * Service to logically delete a listing.
+ * Sets the `isDeleted` field to `true`.
+ * @param {string} listingId - The ID of the listing to delete.
+ * @param {string} userId - The ID of the user making the request.
+ * @returns {Promise<Object>} - A promise resolving to the updated listing.
+ */
+export const deleteListingService = async (listingId, userId) => {
+  try {
+    const listing = await Listing.findOne({ _id: listingId, userId });
+
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+
+    const deletedListing = await Listing.findOneAndUpdate(
+      { _id: listingId, userId },
+      { isDeleted: true },
+      { new: true }
+    );
+
+    return deletedListing;
+  } catch (error) {
+    throw new Error(ERROR_LISTING_DELETE_FAILED);
   }
 };

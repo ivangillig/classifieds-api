@@ -8,6 +8,7 @@ import {
   createNewListing,
   getListingsByUser,
   toggleListingStatusService,
+  deleteListingService,
 } from "../services/listingService.js";
 import {
   buildSuccessResponse,
@@ -23,6 +24,8 @@ import {
   SUCCESS_REPORT_CREATED,
   SUCCESS_LISTING_REACTIVATED,
   SUCCESS_LISTING_PAUSED,
+  ERROR_LISTING_DELETE_FAILED,
+  SUCCESS_LISTING_DELETED,
 } from "../constants/messages.js";
 
 /**
@@ -227,5 +230,36 @@ export const toggleListingStatus = async (req, res, next) => {
     );
   } catch (error) {
     next(error);
+  }
+};
+
+/**
+ * Controller to delete a listing.
+ * Performs a logical delete by setting `isDeleted` to `true`.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+export const deleteListing = async (req, res, next) => {
+  const { id: listingId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const deletedListing = await deleteListingService(listingId, userId);
+
+    res.status(200).json(
+      buildSuccessResponse({
+        data: deletedListing,
+        message: SUCCESS_LISTING_DELETED,
+      })
+    );
+  } catch (error) {
+    if (error.message === ERROR_LISTING_NOT_FOUND) {
+      return res
+        .status(404)
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+    }
+
+    next(getServerErrorResponse(ERROR_LISTING_DELETE_FAILED, error));
   }
 };
