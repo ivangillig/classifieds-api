@@ -12,6 +12,7 @@ import {
   ERROR_REPORT_CREATION_FAILED,
   ERROR_LISTING_STATUS_UPDATE_FAILED,
   ERROR_LISTING_DELETE_FAILED,
+  ERROR_UPDATING_LISTING,
 } from "../constants/messages.js";
 
 /**
@@ -218,5 +219,42 @@ export const deleteListingService = async (listingId, userId) => {
     return deletedListing;
   } catch (error) {
     throw new Error(ERROR_LISTING_DELETE_FAILED);
+  }
+};
+
+/**
+ * Update an existing listing.
+ * @param {string} listingId - The ID of the listing.
+ * @param {string} userId - The ID of the user making the request.
+ * @param {Object} listingData - The new listing data.
+ * @param {Array<string>} removedImages - The URLs of images to be removed.
+ * @returns {Promise<Object>} - A promise resolving to the updated listing.
+ */
+export const editListingService = async (
+  listingId,
+  userId,
+  listingData,
+  removedImages
+) => {
+  try {
+    // Verify the listing exists and belongs to the user
+    const listing = await Listing.findOne({ _id: listingId, userId });
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+
+    // Update the listing
+    const updatedListing = await Listing.findOneAndUpdate(
+      { _id: listingId, userId },
+      { ...listingData },
+      { new: true }
+    );
+
+    // Remove images if necessary
+    if (removedImages && removedImages.length > 0) {
+      await deleteImages(removedImages); // Call to delete images from storage
+    }
+
+    return updatedListing;
+  } catch (error) {
+    throw new Error(ERROR_UPDATING_LISTING);
   }
 };

@@ -9,6 +9,7 @@ import {
   getListingsByUser,
   toggleListingStatusService,
   deleteListingService,
+  editListingService,
 } from "../services/listingService.js";
 import {
   buildSuccessResponse,
@@ -26,6 +27,8 @@ import {
   SUCCESS_LISTING_PAUSED,
   ERROR_LISTING_DELETE_FAILED,
   SUCCESS_LISTING_DELETED,
+  SUCCESS_LISTING_UPDATED,
+  ERROR_UPDATING_LISTING ,
 } from "../constants/messages.js";
 
 /**
@@ -261,5 +264,66 @@ export const deleteListing = async (req, res, next) => {
     }
 
     next(getServerErrorResponse(ERROR_LISTING_DELETE_FAILED, error));
+  }
+};
+
+/**
+ * Controller to update an existing listing.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+export const editListing = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(getBusinessErrorResponse(errors.array()[0].msg));
+  }
+
+  const { id: listingId } = req.params;
+  const userId = req.user.id;
+  const {
+    title,
+    age,
+    description,
+    location,
+    price,
+    phone,
+    useWhatsApp,
+    photos,
+    removedImages,
+  } = req.body;
+
+  try {
+    const editedListing = await editListingService(
+      listingId,
+      userId,
+      {
+        title,
+        age,
+        description,
+        location,
+        price,
+        phone,
+        useWhatsApp,
+        photos,
+      },
+      removedImages
+    );
+
+    res.status(200).json(
+      buildSuccessResponse({
+        data: editedListing,
+        message: SUCCESS_LISTING_UPDATED,
+      })
+    );
+  } catch (error) {
+    if (error.message === ERROR_LISTING_NOT_FOUND) {
+      return res
+        .status(404)
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+    }
+
+    console.error("Error updating listing:", error);
+    next(getServerErrorResponse(ERROR_UPDATING_LISTING , error));
   }
 };

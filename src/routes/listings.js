@@ -4,13 +4,14 @@ import { authenticateUser } from "../middleware/authMiddleware.js";
 import { query } from "express-validator";
 
 import {
+  createListing,
+  editListing,
+  deleteListing,
   fetchListings,
   fetchListingById,
-  createListing,
   createReport,
   fetchUserListings,
   toggleListingStatus,
-  deleteListing,
 } from "../controllers/listingController.js";
 import {
   uploadImages,
@@ -75,6 +76,30 @@ router.post(
   ],
   createListing
 );
+router.put(
+  "/:id",
+  authenticateUser,
+  [
+    body("title").notEmpty().withMessage(ERROR_TITLE_REQUIRED),
+    body("age").notEmpty().withMessage(ERROR_AGE_REQUIRED),
+    body("location").notEmpty().withMessage(ERROR_LOCATION_REQUIRED),
+    body("price")
+      .notEmpty()
+      .withMessage(ERROR_PRICE_REQUIRED)
+      .isNumeric()
+      .withMessage(ERROR_PRICE_MUST_BE_NUMBER),
+    body("phone")
+      .notEmpty()
+      .withMessage(ERROR_PHONE_REQUIRED)
+      .isNumeric()
+      .withMessage(ERROR_PHONE_MUST_BE_NUMBER),
+    body("useWhatsApp")
+      .isBoolean()
+      .withMessage(ERROR_USE_WHATSAPP_BOOLEAN),
+  ],
+  editListing
+);
+
 router.get(
   "/my-listings",
   authenticateUser,
