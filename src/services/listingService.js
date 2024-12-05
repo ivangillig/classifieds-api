@@ -244,7 +244,9 @@ export const editListingService = async (
     // Update the listing
     const updatedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
-      { ...listingData },
+      { ...listingData,
+        status: STATUS.UNDER_REVIEW
+       },
       { new: true }
     );
 
