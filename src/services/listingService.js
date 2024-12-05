@@ -244,9 +244,7 @@ export const editListingService = async (
     // Update the listing
     const updatedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
-      { ...listingData,
-        status: STATUS.UNDER_REVIEW
-       },
+      { ...listingData, status: STATUS.UNDER_REVIEW },
       { new: true }
     );
 
@@ -256,6 +254,33 @@ export const editListingService = async (
     }
 
     return updatedListing;
+  } catch (error) {
+    throw new Error(ERROR_UPDATING_LISTING);
+  }
+};
+
+/**
+ * Service to renew a listing, extending its validity.
+ * @param {string} listingId - The ID of the listing to renew.
+ * @param {string} userId - The ID of the user making the request.
+ * @returns {Promise<Object>} - A promise resolving to the updated listing.
+ */
+export const renewListingService = async (listingId, userId) => {
+  try {
+    const listing = await Listing.findOne({ _id: listingId, userId });
+
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+
+    const renewedListing = await Listing.findOneAndUpdate(
+      { _id: listingId, userId },
+      {
+        $set: { validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }, // Extend 30 days
+        status: STATUS.PUBLISHED,
+      },
+      { new: true }
+    );
+
+    return renewedListing;
   } catch (error) {
     throw new Error(ERROR_UPDATING_LISTING);
   }

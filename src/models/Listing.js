@@ -55,6 +55,10 @@ const ListingSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    validUntil: {
+      type: Date,
+      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default: 30 days from now
+    },
   },
   { timestamps: true }
 );

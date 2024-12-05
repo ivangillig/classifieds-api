@@ -12,6 +12,7 @@ import {
   createReport,
   fetchUserListings,
   toggleListingStatus,
+  renewListing,
 } from "../controllers/listingController.js";
 import {
   uploadImages,
@@ -93,9 +94,7 @@ router.put(
       .withMessage(ERROR_PHONE_REQUIRED)
       .isNumeric()
       .withMessage(ERROR_PHONE_MUST_BE_NUMBER),
-    body("useWhatsApp")
-      .isBoolean()
-      .withMessage(ERROR_USE_WHATSAPP_BOOLEAN),
+    body("useWhatsApp").isBoolean().withMessage(ERROR_USE_WHATSAPP_BOOLEAN),
   ],
   editListing
 );
@@ -112,6 +111,7 @@ router.get(
   fetchUserListings
 );
 router.patch("/:id/toggle-status", authenticateUser, toggleListingStatus);
+router.patch("/:id/renewListing", authenticateUser, renewListing);
 router.delete("/:id", authenticateUser, deleteListing);
 router.get("/:id", fetchListingById);
 export default router;
