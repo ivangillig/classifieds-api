@@ -16,13 +16,14 @@ import {
 } from "../constants/messages.js";
 
 /**
- * Fetch listings by province or city with pagination.
+ * Fetch listings by province or city with pagination and optional search query.
  * @param {string} province - The name of the province or city to filter listings.
  * @param {number} page - The page number for pagination.
  * @param {number} limit - The number of listings per page.
+ * @param {string} query - The search query to filter listings.
  * @returns {Promise<Object>} - A promise resolving to an object containing listings and total count.
  */
-export const getListingsByLocation = async (province, page = 1, limit = 10) => {
+export const getListings = async (province, page = 1, limit = 10, query = "") => {
   try {
     const skip = (page - 1) * limit;
 
@@ -34,18 +35,23 @@ export const getListingsByLocation = async (province, page = 1, limit = 10) => {
       ],
     }).select("_id");
 
+    // Build search filter
+    const searchFilter = query ? { title: new RegExp(query, "i") } : {};
+
     // Fetch listings with pagination
     const [listings, total] = await Promise.all([
       Listing.find({
         ...PUBLISHED_STATUS_FILTER,
         isDeleted: false,
         location: { $in: locations.map((location) => location._id) },
+        ...searchFilter,
       })
         .populate("location", "name subcountry country")
         .skip(skip)
         .limit(limit),
       Listing.countDocuments({
         location: { $in: locations.map((location) => location._id) },
+        ...searchFilter,
       }),
     ]);
 

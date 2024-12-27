@@ -3,7 +3,7 @@
 import { validationResult } from "express-validator";
 import {
   createReportForListing,
-  getListingsByLocation,
+  getListings,
   getListingById,
   createNewListing,
   getListingsByUser,
@@ -35,21 +35,22 @@ import {
 } from "../constants/messages.js";
 
 /**
- * Controller to fetch listings with pagination.
+ * Controller to fetch listings with pagination and optional search query.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
  */
 export const fetchListings = async (req, res, next) => {
-  const { province } = req.query;
+  const { province, query } = req.query;
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit) || 12;
 
   try {
-    const { listings, total } = await getListingsByLocation(
+    const { listings, total } = await getListings(
       province,
       page,
-      limit
+      limit,
+      query
     );
     res.status(200).json(
       buildSuccessResponse({
