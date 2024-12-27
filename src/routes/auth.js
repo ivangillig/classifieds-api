@@ -65,7 +65,7 @@ router.get("/getUserInfo", authenticateUser, async (req, res, next) => {
 
     // Find user by ID (decoded from JWT)
     const user = await User.findById(req.user.id).select(
-      "displayName email profilePhoto"
+      "profileName email profilePhoto phone"
     );
     if (!user) {
       throw getNotFoundErrorResponse(ERROR_USER_NOT_FOUND);

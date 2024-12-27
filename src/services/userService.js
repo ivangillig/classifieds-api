@@ -22,7 +22,16 @@ export const updateUserProfileService = async (userId, updateData) => {
       throw new Error(ERROR_USER_NOT_FOUND);
     }
 
-    return updatedUser;
+    // Limit the information returned
+    const limitedUserInfo = {
+      _id: updatedUser._id,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      profileName: updatedUser.profileName,
+      profilePhoto: updatedUser.profilePhoto,
+    };
+
+    return limitedUserInfo;
   } catch (error) {
     throw new Error(ERROR_UPDATING_USER);
   }
