@@ -2,7 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import { authenticateUser } from '../middleware/authMiddleware.js'
 import { body, query } from 'express-validator'
-import { handleValidationErrors, validateQueryParameter } from '../middleware/validationMiddleware.js'
+import { validateQueryParameter } from '../middleware/validationMiddleware.js'
 
 import {
   createListing,
@@ -61,7 +61,7 @@ router.post(
       .optional()
       .isString()
       .withMessage(ERROR_REPORT_CONTACT_INFO_STRING),
-    handleValidationErrors,
+    
   ],
   createReport
 )
@@ -85,7 +85,7 @@ router.post(
       .isNumeric()
       .withMessage(ERROR_PHONE_MUST_BE_NUMBER),
     body('useWhatsApp').isBoolean().withMessage(ERROR_USE_WHATSAPP_BOOLEAN),
-    handleValidationErrors,
+    
   ],
   createListing
 )
@@ -107,7 +107,7 @@ router.put(
       .isNumeric()
       .withMessage(ERROR_PHONE_MUST_BE_NUMBER),
     body('useWhatsApp').isBoolean().withMessage(ERROR_USE_WHATSAPP_BOOLEAN),
-    handleValidationErrors,
+    
   ],
   editListing
 )
@@ -120,7 +120,7 @@ router.get(
       .optional()
       .isString()
       .withMessage(ERROR_STATUS_MUST_BE_A_STRING),
-    handleValidationErrors,
+    
   ],
   fetchUserListings
 )
