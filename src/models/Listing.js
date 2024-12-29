@@ -1,7 +1,7 @@
 // models/Listing.js
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
-const { Schema } = mongoose;
+const { Schema } = mongoose
 
 const ListingSchema = new Schema(
   {
@@ -19,7 +19,7 @@ const ListingSchema = new Schema(
     },
     location: {
       type: Schema.Types.ObjectId,
-      ref: "Location",
+      ref: 'Location',
       required: true,
     },
     photos: [
@@ -41,13 +41,13 @@ const ListingSchema = new Schema(
     },
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     status: {
       type: String,
-      enum: ["published", "paused", "underReview", "expired", "blocked"],
-      default: "underReview",
+      enum: ['published', 'paused', 'underReview', 'expired', 'blocked'],
+      default: 'underReview',
       required: true,
     },
     reports: { type: Number, default: 0 },
@@ -61,16 +61,16 @@ const ListingSchema = new Schema(
     },
   },
   { timestamps: true }
-);
+)
 
-ListingSchema.pre("save", function (next) {
+ListingSchema.pre('save', function (next) {
   // Check if the 'reports' count exceeds a threshold
   if (this.reports >= 5) {
-    this.status = "blocked"; // Update the status to 'blocked'
+    this.status = 'blocked' // Update the status to 'blocked'
   }
-  next(); // Call next to proceed with the save operation
-});
+  next() // Call next to proceed with the save operation
+})
 
-const Listing = mongoose.model("Listing", ListingSchema);
+const Listing = mongoose.model('Listing', ListingSchema)
 
-export default Listing;
+export default Listing

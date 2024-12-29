@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import app from './app.js'
 import dotenv from 'dotenv'
-import './jobs/expireListings.js'
+import runExpireListings from './jobs/expireListings.js'
 
 dotenv.config()
 
@@ -11,7 +11,10 @@ const MONGO_URI =
 
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
+  .then(() => {
+    console.log('MongoDB connected')
+    runExpireListings()
+  })
   .catch((err) => console.log(err))
 
 app.listen(PORT, () => {
