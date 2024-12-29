@@ -1,6 +1,6 @@
 // src/controllers/listingController.js
 
-import { validationResult } from "express-validator";
+import { validationResult } from 'express-validator'
 import {
   createReportForListing,
   getListings,
@@ -11,12 +11,12 @@ import {
   deleteListingService,
   editListingService,
   renewListingService,
-} from "../services/listingService.js";
+} from '../services/listingService.js'
 import {
   buildSuccessResponse,
   getServerErrorResponse,
   getBusinessErrorResponse,
-} from "../utils/responseUtils.js";
+} from '../utils/responseUtils.js'
 import {
   ERROR_LISTINGS_FETCH_FAILED,
   ERROR_LISTING_FETCH_FAILED,
@@ -32,7 +32,7 @@ import {
   ERROR_UPDATING_LISTING,
   SUCCESS_LISTING_RENEWED,
   ERROR_LISTING_RENEW_FAILED,
-} from "../constants/messages.js";
+} from '../constants/messages.js'
 
 /**
  * Controller to fetch listings with pagination and optional search query.
@@ -41,17 +41,12 @@ import {
  * @param {Function} next - The next middleware function.
  */
 export const fetchListings = async (req, res, next) => {
-  const { province, query } = req.query;
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit) || 12;
+  const { province, query } = req.query
+  const page = parseInt(req.query.page, 10) || 1
+  const limit = parseInt(req.query.limit) || 12
 
   try {
-    const { listings, total } = await getListings(
-      province,
-      page,
-      limit,
-      query
-    );
+    const { listings, total } = await getListings(province, page, limit, query)
     res.status(200).json(
       buildSuccessResponse({
         data: listings,
@@ -62,12 +57,12 @@ export const fetchListings = async (req, res, next) => {
           totalPages: Math.ceil(total / limit),
         },
       })
-    );
+    )
   } catch (error) {
-    console.error(ERROR_LISTINGS_FETCH_FAILED, error);
-    next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error));
+    console.error(ERROR_LISTINGS_FETCH_FAILED, error)
+    next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error))
   }
-};
+}
 
 /**
  * Controller to fetch a specific listing by ID.
@@ -76,22 +71,22 @@ export const fetchListings = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const fetchListingById = async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.params
 
   try {
-    const listing = await getListingById(id);
-    res.status(200).json(buildSuccessResponse({ data: listing }));
+    const listing = await getListingById(id)
+    res.status(200).json(buildSuccessResponse({ data: listing }))
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
       return res
         .status(404)
-        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND))
     }
 
-    console.error(ERROR_LISTING_FETCH_FAILED, error);
-    next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error));
+    console.error(ERROR_LISTING_FETCH_FAILED, error)
+    next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error))
   }
-};
+}
 
 /**
  * Controller to create a new listing.
@@ -100,9 +95,9 @@ export const fetchListingById = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const createListing = async (req, res, next) => {
-  const errors = validationResult(req);
+  const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return next(getBusinessErrorResponse(errors.array()[0].msg));
+    return next(getBusinessErrorResponse(errors.array()[0].msg))
   }
 
   const {
@@ -114,7 +109,7 @@ export const createListing = async (req, res, next) => {
     price,
     phone,
     useWhatsApp,
-  } = req.body;
+  } = req.body
 
   try {
     const newListing = await createNewListing({
@@ -127,19 +122,19 @@ export const createListing = async (req, res, next) => {
       phone,
       useWhatsApp,
       userId: req.user.id,
-    });
+    })
 
     res.status(201).json(
       buildSuccessResponse({
         data: { listing: newListing },
         message: SUCCESS_LISTING_CREATED,
       })
-    );
+    )
   } catch (error) {
-    console.error(ERROR_LISTING_FETCH_FAILED, error);
-    next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error));
+    console.error(ERROR_LISTING_FETCH_FAILED, error)
+    next(getServerErrorResponse(ERROR_LISTING_FETCH_FAILED, error))
   }
-};
+}
 
 /**
  * Controller to create a report for a listing.
@@ -148,7 +143,7 @@ export const createListing = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const createReport = async (req, res, next) => {
-  const { listingId, reason, additionalInfo, contactInfo } = req.body;
+  const { listingId, reason, additionalInfo, contactInfo } = req.body
 
   try {
     const report = await createReportForListing({
@@ -156,25 +151,25 @@ export const createReport = async (req, res, next) => {
       reason,
       additionalInfo,
       contactInfo,
-    });
+    })
 
     res.status(201).json(
       buildSuccessResponse({
         data: { report },
         message: SUCCESS_REPORT_CREATED,
       })
-    );
+    )
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
       return res
         .status(404)
-        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND))
     }
 
-    console.error(ERROR_REPORT_CREATION_FAILED, error);
-    next(getServerErrorResponse(ERROR_REPORT_CREATION_FAILED, error));
+    console.error(ERROR_REPORT_CREATION_FAILED, error)
+    next(getServerErrorResponse(ERROR_REPORT_CREATION_FAILED, error))
   }
-};
+}
 
 /**
  * Controller to fetch listings of the authenticated user.
@@ -183,10 +178,10 @@ export const createReport = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const fetchUserListings = async (req, res, next) => {
-  const userId = req.user.id;
-  const { status } = req.query;
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
+  const userId = req.user.id
+  const { status } = req.query
+  const page = parseInt(req.query.page, 10) || 1
+  const limit = parseInt(req.query.limit, 10) || 10
 
   try {
     const { listings, total } = await getListingsByUser(
@@ -194,7 +189,7 @@ export const fetchUserListings = async (req, res, next) => {
       status,
       page,
       limit
-    );
+    )
 
     res.status(200).json(
       buildSuccessResponse({
@@ -206,12 +201,12 @@ export const fetchUserListings = async (req, res, next) => {
           totalPages: Math.ceil(total / limit),
         },
       })
-    );
+    )
   } catch (error) {
-    console.error(ERROR_LISTINGS_FETCH_FAILED, error);
-    next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error));
+    console.error(ERROR_LISTINGS_FETCH_FAILED, error)
+    next(getServerErrorResponse(ERROR_LISTINGS_FETCH_FAILED, error))
   }
-};
+}
 
 /**
  * Controller to pause or reactivate a listing.
@@ -220,25 +215,25 @@ export const fetchUserListings = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const toggleListingStatus = async (req, res, next) => {
-  const { id: listingId } = req.params;
-  const userId = req.user.id;
+  const { id: listingId } = req.params
+  const userId = req.user.id
 
   try {
-    const updatedListing = await toggleListingStatusService(listingId, userId);
+    const updatedListing = await toggleListingStatusService(listingId, userId)
 
     res.status(200).json(
       buildSuccessResponse({
         data: updatedListing,
         message:
-          updatedListing.status === "paused"
+          updatedListing.status === 'paused'
             ? SUCCESS_LISTING_PAUSED
             : SUCCESS_LISTING_REACTIVATED,
       })
-    );
+    )
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 /**
  * Controller to delete a listing.
@@ -248,28 +243,28 @@ export const toggleListingStatus = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const deleteListing = async (req, res, next) => {
-  const { id: listingId } = req.params;
-  const userId = req.user.id;
+  const { id: listingId } = req.params
+  const userId = req.user.id
 
   try {
-    const deletedListing = await deleteListingService(listingId, userId);
+    const deletedListing = await deleteListingService(listingId, userId)
 
     res.status(200).json(
       buildSuccessResponse({
         data: deletedListing,
         message: SUCCESS_LISTING_DELETED,
       })
-    );
+    )
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
       return res
         .status(404)
-        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND))
     }
 
-    next(getServerErrorResponse(ERROR_LISTING_DELETE_FAILED, error));
+    next(getServerErrorResponse(ERROR_LISTING_DELETE_FAILED, error))
   }
-};
+}
 
 /**
  * Controller to update an existing listing.
@@ -278,13 +273,13 @@ export const deleteListing = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const editListing = async (req, res, next) => {
-  const errors = validationResult(req);
+  const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return next(getBusinessErrorResponse(errors.array()[0].msg));
+    return next(getBusinessErrorResponse(errors.array()[0].msg))
   }
 
-  const { id: listingId } = req.params;
-  const userId = req.user.id;
+  const { id: listingId } = req.params
+  const userId = req.user.id
   const {
     title,
     age,
@@ -295,7 +290,7 @@ export const editListing = async (req, res, next) => {
     useWhatsApp,
     photos,
     removedImages,
-  } = req.body;
+  } = req.body
 
   try {
     const editedListing = await editListingService(
@@ -312,25 +307,25 @@ export const editListing = async (req, res, next) => {
         photos,
       },
       removedImages
-    );
+    )
 
     res.status(200).json(
       buildSuccessResponse({
         data: editedListing,
         message: SUCCESS_LISTING_UPDATED,
       })
-    );
+    )
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
       return res
         .status(404)
-        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND))
     }
 
-    console.error("Error updating listing:", error);
-    next(getServerErrorResponse(ERROR_UPDATING_LISTING, error));
+    console.error('Error updating listing:', error)
+    next(getServerErrorResponse(ERROR_UPDATING_LISTING, error))
   }
-};
+}
 
 /**
  * Controller to renew a listing.
@@ -340,26 +335,26 @@ export const editListing = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const renewListing = async (req, res, next) => {
-  const { id: listingId } = req.params;
-  const userId = req.user.id;
+  const { id: listingId } = req.params
+  const userId = req.user.id
 
   try {
-    const renewedListing = await renewListingService(listingId, userId);
+    const renewedListing = await renewListingService(listingId, userId)
 
     res.status(200).json(
       buildSuccessResponse({
         data: renewedListing,
         message: SUCCESS_LISTING_RENEWED,
       })
-    );
+    )
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
       return res
         .status(404)
-        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND));
+        .json(getBusinessErrorResponse(ERROR_LISTING_NOT_FOUND))
     }
 
-    console.error("Error renewing listing:", error);
-    next(getServerErrorResponse(ERROR_LISTING_RENEW_FAILED, error));
+    console.error('Error renewing listing:', error)
+    next(getServerErrorResponse(ERROR_LISTING_RENEW_FAILED, error))
   }
-};
+}
