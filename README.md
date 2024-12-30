@@ -4,11 +4,11 @@ This is the backend for a classified ads web application. The API provides endpo
 
 ## Technologies Used
 
-- Node.js
-- Express
-- MongoDB
-- Mongoose
-- JWT for authentication
+- [Node.js](https://nodejs.org/)
+- [Express](https://expressjs.com/)
+- [MongoDB](https://www.mongodb.com/)
+- [Mongoose](https://mongoosejs.com/)
+- [JWT](https://jwt.io/) for authentication
 
 ## Getting Started
 
@@ -46,7 +46,6 @@ JWT_SECRET=your_jwt_secret
 REFRESH_TOKEN_SECRET=your_refresh_token_secret
 SESSION_EXPIRY=60 * 15
 REFRESH_TOKEN_EXPIRY=60 * 60 * 24 * 30
-COOKIE_SECRET=your_cookie_secret
 
 FRONTEND_URL=http://localhost:4000
 ```
