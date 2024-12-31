@@ -7,6 +7,7 @@ import {
 import {
   ERROR_INVALID_TOKEN,
   ERROR_USER_NOT_FOUND,
+  ERROR_UNAUTHORIZED
 } from "../constants/messages.js";
 
 // Middleware to authenticate a token without verifying the user
@@ -46,7 +47,7 @@ export const authenticateUser = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select(
-      "profileName email profilePhoto phone"
+      "profileName email profilePhoto phone role"
     );
 
     if (!user) {
@@ -62,4 +63,14 @@ export const authenticateUser = async (req, res, next) => {
   }
 };
 
-export default { authenticateToken, authenticateUser };
+// Middleware to check user roles
+export const authorizeRoles = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json(getUnauthorizedErrorResponse(ERROR_UNAUTHORIZED));
+    }
+    next();
+  };
+};
+
+export default { authenticateToken, authenticateUser, authorizeRoles };

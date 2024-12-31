@@ -291,3 +291,23 @@ export const renewListingService = async (listingId, userId) => {
     throw new Error(ERROR_UPDATING_LISTING);
   }
 };
+
+/**
+ * Service to approve a listing.
+ * @param {string} listingId - The ID of the listing to approve.
+ * @returns {Promise<Object>} - A promise resolving to the updated listing.
+ */
+export const approveListingService = async (listingId) => {
+  try {
+    const listing = await Listing.findById(listingId);
+
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+
+    listing.status = STATUS.PUBLISHED;
+    await listing.save();
+
+    return listing;
+  } catch (error) {
+    throw new Error(ERROR_UPDATING_LISTING);
+  }
+};

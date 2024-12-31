@@ -11,6 +11,7 @@ import {
   deleteListingService,
   editListingService,
   renewListingService,
+  approveListingService,
 } from '../services/listingService.js'
 import {
   buildSuccessResponse,
@@ -32,6 +33,8 @@ import {
   ERROR_UPDATING_LISTING,
   SUCCESS_LISTING_RENEWED,
   ERROR_LISTING_RENEW_FAILED,
+  SUCCESS_LISTING_APPROVED,
+  ERROR_LISTING_APPROVE_FAILED,
 } from '../constants/messages.js'
 
 /**
@@ -358,3 +361,25 @@ export const renewListing = async (req, res, next) => {
     next(getServerErrorResponse(ERROR_LISTING_RENEW_FAILED, error))
   }
 }
+
+/**
+ * Controller to approve a listing.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+export const approveListing = async (req, res, next) => {
+  const { id: listingId } = req.params;
+
+  try {
+    const approvedListing = await approveListingService(listingId);
+    res.status(200).json(
+      buildSuccessResponse({
+        data: approvedListing,
+        message: SUCCESS_LISTING_APPROVED,
+      })
+    );
+  } catch (error) {
+    next(getServerErrorResponse(ERROR_LISTING_APPROVE_FAILED, error));
+  }
+};
