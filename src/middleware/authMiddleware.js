@@ -66,7 +66,12 @@ export const authenticateUser = async (req, res, next) => {
 // Middleware to check user roles
 export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user || !allowedRoles.includes(req.user.role)) {
+    const userRole = req.user && req.user.role;
+    const isAuthorized = allowedRoles.some(role => 
+      Array.isArray(role) ? role.includes(userRole) : role === userRole
+    );
+
+    if (!isAuthorized) {
       return res.status(403).json(getUnauthorizedErrorResponse(ERROR_UNAUTHORIZED));
     }
     next();

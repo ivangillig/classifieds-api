@@ -41,6 +41,7 @@ router.post('/report', validateCreateReport, createReport)
 router.post(
   '/createListing',
   authenticateUser,
+  authorizeRoles(ROLES.USER),
   validateCreateListing,
   createListing
 )
