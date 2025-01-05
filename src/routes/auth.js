@@ -14,6 +14,7 @@ import {
   ERROR_FAILED_LOGOUT,
   ERROR_INVALID_TOKEN_OR_USER_ID,
   ERROR_USER_NOT_FOUND,
+  EMAIL_CONFIRMED_SUCCESS
 } from '../constants/messages.js'
 import { sendEmailConfirmation } from '../utils/emailUtils.js'
 
@@ -62,7 +63,7 @@ router.get('/confirm-email/:token', async (req, res, next) => {
     user.isEmailConfirmed = true
     await user.save()
 
-    res.status(200).json(buildSuccessResponse({ message: 'Email confirmed' }))
+    res.status(200).json(buildSuccessResponse({ message: EMAIL_CONFIRMED_SUCCESS }))
   } catch (error) {
     next(error)
   }
