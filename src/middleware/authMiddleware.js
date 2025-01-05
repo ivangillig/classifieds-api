@@ -7,7 +7,8 @@ import {
 import {
   ERROR_INVALID_TOKEN,
   ERROR_USER_NOT_FOUND,
-  ERROR_UNAUTHORIZED
+  ERROR_UNAUTHORIZED,
+  ERROR_SESSION_EXPIRED
 } from "../constants/messages.js";
 
 // Middleware to authenticate a token without verifying the user
@@ -23,9 +24,10 @@ export const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
+      const errorMessage = err.name === 'TokenExpiredError' ? ERROR_SESSION_EXPIRED : ERROR_INVALID_TOKEN;
       return res
         .status(403)
-        .json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
+        .json(getUnauthorizedErrorResponse(errorMessage));
     }
     req.user = user;
     next();
@@ -59,7 +61,8 @@ export const authenticateUser = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
+    const errorMessage = error.name === 'TokenExpiredError' ? ERROR_SESSION_EXPIRED : ERROR_INVALID_TOKEN;
+    res.status(401).json(getUnauthorizedErrorResponse(errorMessage));
   }
 };
 

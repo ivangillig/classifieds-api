@@ -34,7 +34,7 @@ router.get(
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "1d",
     });
 
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
@@ -75,6 +75,27 @@ router.get("/getUserInfo", authenticateUser, async (req, res, next) => {
   } catch (error) {
     next(error); // Pass the error to the error handling middleware
   }
+});
+
+// @desc    Refresh token
+// @route   POST /auth/refresh
+router.post("/refresh", (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return res.status(401).json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
+  }
+
+  jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json(getUnauthorizedErrorResponse(ERROR_INVALID_TOKEN));
+    }
+
+    const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    res.status(200).json(buildSuccessResponse({ accessToken: newAccessToken }));
+  });
 });
 
 export default router;
