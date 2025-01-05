@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Confirmation</title>
+  <style>
+    .container {
+      font-family: Arial, sans-serif;
+      margin: 0 auto;
+      padding: 20px;
+      max-width: 600px;
+      background-color: #f4f4f4;
+      border-radius: 8px;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 20px;
+      font-size: 16px;
+      color: #fff;
+      background-color: #007bff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" style="margin-top: 20px;">
+    <h1>Email Confirmation</h1>
+    <p>Please confirm your email by clicking the button below:</p>
+    <a href="{{confirmationLink}}" class="button">Confirm Email</a>
+  </div>
+</body>
+</html>
