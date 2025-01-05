@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     enum: Object.values(ROLES),
     default: ROLES.USER,
   },
+  isEmailConfirmed: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 userSchema.statics.findOrCreate = async function (profile) {
@@ -57,6 +61,7 @@ userSchema.statics.findOrCreate = async function (profile) {
         profileName: googleName,
         email: email,
         profilePhoto: profilePhoto,
+        isEmailConfirmed: false,
       })
       await user.save()
     }
