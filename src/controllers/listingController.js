@@ -369,17 +369,17 @@ export const renewListing = async (req, res, next) => {
  * @param {Function} next - The next middleware function.
  */
 export const approveListing = async (req, res, next) => {
-  const { id: listingId } = req.params;
+  const { id: listingId } = req.params
 
   try {
-    const approvedListing = await approveListingService(listingId);
+    const approvedListing = await approveListingService(listingId)
     res.status(200).json(
       buildSuccessResponse({
         data: approvedListing,
         message: SUCCESS_LISTING_APPROVED,
       })
-    );
+    )
   } catch (error) {
-    next(getServerErrorResponse(ERROR_LISTING_APPROVE_FAILED, error));
+    next(getServerErrorResponse(ERROR_LISTING_APPROVE_FAILED, error))
   }
-};
+}

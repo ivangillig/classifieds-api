@@ -3,9 +3,8 @@ export const ROLES = {
   ADMIN: 'admin',
   MODERATOR: 'moderator',
   GUEST: 'guest',
-};
+}
 
 export const ROLE_GROUPS = {
-    ALL_USERS: [ROLES.ADMIN, ROLES.MODERATOR, ROLES.USER],
-};
-
+  ALL_USERS: [ROLES.ADMIN, ROLES.MODERATOR, ROLES.USER],
+}

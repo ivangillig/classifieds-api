@@ -1,9 +1,9 @@
 // src/services/listingService.js
 
-import Listing from "../models/Listing.js";
-import Location from "../models/Location.js";
-import Report from "../models/Report.js";
-import { PUBLISHED_STATUS_FILTER, STATUS } from "../utils/businessConstants.js";
+import Listing from '../models/Listing.js'
+import Location from '../models/Location.js'
+import Report from '../models/Report.js'
+import { PUBLISHED_STATUS_FILTER, STATUS } from '../utils/businessConstants.js'
 
 import {
   ERROR_LISTINGS_FETCH_FAILED,
@@ -13,7 +13,7 @@ import {
   ERROR_LISTING_STATUS_UPDATE_FAILED,
   ERROR_LISTING_DELETE_FAILED,
   ERROR_UPDATING_LISTING,
-} from "../constants/messages.js";
+} from '../constants/messages.js'
 
 /**
  * Fetch listings by province or city with pagination and optional search query.
@@ -23,20 +23,25 @@ import {
  * @param {string} query - The search query to filter listings.
  * @returns {Promise<Object>} - A promise resolving to an object containing listings and total count.
  */
-export const getListings = async (province, page = 1, limit = 10, query = "") => {
+export const getListings = async (
+  province,
+  page = 1,
+  limit = 10,
+  query = ''
+) => {
   try {
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit
 
     // Find matching locations by province or city
     const locations = await Location.find({
       $or: [
-        { subcountry: new RegExp(province, "i") },
-        { name: new RegExp(province, "i") },
+        { subcountry: new RegExp(province, 'i') },
+        { name: new RegExp(province, 'i') },
       ],
-    }).select("_id");
+    }).select('_id')
 
     // Build search filter
-    const searchFilter = query ? { title: new RegExp(query, "i") } : {};
+    const searchFilter = query ? { title: new RegExp(query, 'i') } : {}
 
     // Fetch listings with pagination
     const [listings, total] = await Promise.all([
@@ -46,20 +51,20 @@ export const getListings = async (province, page = 1, limit = 10, query = "") =>
         location: { $in: locations.map((location) => location._id) },
         ...searchFilter,
       })
-        .populate("location", "name subcountry country")
+        .populate('location', 'name subcountry country')
         .skip(skip)
         .limit(limit),
       Listing.countDocuments({
         location: { $in: locations.map((location) => location._id) },
         ...searchFilter,
       }),
-    ]);
+    ])
 
-    return { listings, total };
+    return { listings, total }
   } catch (error) {
-    throw new Error(ERROR_LISTINGS_FETCH_FAILED);
+    throw new Error(ERROR_LISTINGS_FETCH_FAILED)
   }
-};
+}
 
 /**
  * Fetch a listing by its ID.
@@ -69,22 +74,22 @@ export const getListings = async (province, page = 1, limit = 10, query = "") =>
 export const getListingById = async (id) => {
   try {
     const listing = await Listing.findById(id).populate(
-      "location",
-      "name subcountry country"
-    );
+      'location',
+      'name subcountry country'
+    )
 
     if (!listing) {
-      throw new Error(ERROR_LISTING_NOT_FOUND);
+      throw new Error(ERROR_LISTING_NOT_FOUND)
     }
 
-    return listing;
+    return listing
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
-      throw error;
+      throw error
     }
-    throw new Error(ERROR_LISTING_FETCH_FAILED);
+    throw new Error(ERROR_LISTING_FETCH_FAILED)
   }
-};
+}
 
 /**
  * Create a new listing.
@@ -93,13 +98,13 @@ export const getListingById = async (id) => {
  */
 export const createNewListing = async (listingData) => {
   try {
-    const newListing = new Listing(listingData);
-    await newListing.save();
-    return newListing;
+    const newListing = new Listing(listingData)
+    await newListing.save()
+    return newListing
   } catch (error) {
-    throw new Error(ERROR_LISTING_FETCH_FAILED);
+    throw new Error(ERROR_LISTING_FETCH_FAILED)
   }
-};
+}
 
 /**
  * Create a new report for a listing.
@@ -107,13 +112,13 @@ export const createNewListing = async (listingData) => {
  * @returns {Promise<Object>} - A promise resolving to the created report.
  */
 export const createReportForListing = async (reportData) => {
-  const { listingId, reason, additionalInfo, contactInfo } = reportData;
+  const { listingId, reason, additionalInfo, contactInfo } = reportData
 
   try {
     // Check if listing exists
-    const listing = await Listing.findById(listingId);
+    const listing = await Listing.findById(listingId)
     if (!listing) {
-      throw new Error(ERROR_LISTING_NOT_FOUND);
+      throw new Error(ERROR_LISTING_NOT_FOUND)
     }
 
     // Create and save the report
@@ -122,23 +127,23 @@ export const createReportForListing = async (reportData) => {
       reason,
       additionalInfo,
       contactInfo,
-    });
-    await report.save();
+    })
+    await report.save()
 
     // Increment the report count on the listing
-    listing.reports = (listing.reports || 0) + 1;
-    await listing.save();
+    listing.reports = (listing.reports || 0) + 1
+    await listing.save()
 
-    return report;
+    return report
   } catch (error) {
-    console.log(error);
+    console.log(error)
 
     if (error.message === ERROR_LISTING_NOT_FOUND) {
-      throw error;
+      throw error
     }
-    throw new Error(ERROR_REPORT_CREATION_FAILED);
+    throw new Error(ERROR_REPORT_CREATION_FAILED)
   }
-};
+}
 
 /**
  * Fetch listings by user with optional status filter.
@@ -155,26 +160,26 @@ export const getListingsByUser = async (
   limit = 10
 ) => {
   try {
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit
 
     // Dinamic filter
-    const filter = { userId, isDeleted: false };
-    if (status) filter.status = status;
+    const filter = { userId, isDeleted: false }
+    if (status) filter.status = status
 
     // Find listings
     const [listings, total] = await Promise.all([
       Listing.find(filter)
-        .populate("location", "name subcountry country")
+        .populate('location', 'name subcountry country')
         .skip(skip)
         .limit(limit),
       Listing.countDocuments(filter),
-    ]);
+    ])
 
-    return { listings, total };
+    return { listings, total }
   } catch (error) {
-    throw new Error(ERROR_LISTINGS_FETCH_FAILED);
+    throw new Error(ERROR_LISTINGS_FETCH_FAILED)
   }
-};
+}
 
 /**
  * Service to pause or reactivate a listing.
@@ -184,24 +189,24 @@ export const getListingsByUser = async (
  */
 export const toggleListingStatusService = async (listingId, userId) => {
   try {
-    const listing = await Listing.findOne({ _id: listingId, userId });
+    const listing = await Listing.findOne({ _id: listingId, userId })
 
-    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND)
 
     const newStatus =
-      listing.status === STATUS.PAUSED ? STATUS.PUBLISHED : STATUS.PAUSED;
+      listing.status === STATUS.PAUSED ? STATUS.PUBLISHED : STATUS.PAUSED
 
     const updatedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
       { status: newStatus },
       { new: true }
-    );
+    )
 
-    return updatedListing;
+    return updatedListing
   } catch (error) {
-    throw new Error(ERROR_LISTING_STATUS_UPDATE_FAILED);
+    throw new Error(ERROR_LISTING_STATUS_UPDATE_FAILED)
   }
-};
+}
 
 /**
  * Service to logically delete a listing.
@@ -212,21 +217,21 @@ export const toggleListingStatusService = async (listingId, userId) => {
  */
 export const deleteListingService = async (listingId, userId) => {
   try {
-    const listing = await Listing.findOne({ _id: listingId, userId });
+    const listing = await Listing.findOne({ _id: listingId, userId })
 
-    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND)
 
     const deletedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
       { isDeleted: true },
       { new: true }
-    );
+    )
 
-    return deletedListing;
+    return deletedListing
   } catch (error) {
-    throw new Error(ERROR_LISTING_DELETE_FAILED);
+    throw new Error(ERROR_LISTING_DELETE_FAILED)
   }
-};
+}
 
 /**
  * Update an existing listing.
@@ -244,26 +249,26 @@ export const editListingService = async (
 ) => {
   try {
     // Verify the listing exists and belongs to the user
-    const listing = await Listing.findOne({ _id: listingId, userId });
-    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+    const listing = await Listing.findOne({ _id: listingId, userId })
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND)
 
     // Update the listing
     const updatedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
       { ...listingData, status: STATUS.UNDER_REVIEW },
       { new: true }
-    );
+    )
 
     // Remove images if necessary
     if (removedImages && removedImages.length > 0) {
-      await deleteImages(removedImages); // Call to delete images from storage
+      await deleteImages(removedImages) // Call to delete images from storage
     }
 
-    return updatedListing;
+    return updatedListing
   } catch (error) {
-    throw new Error(ERROR_UPDATING_LISTING);
+    throw new Error(ERROR_UPDATING_LISTING)
   }
-};
+}
 
 /**
  * Service to renew a listing, extending its validity.
@@ -273,9 +278,9 @@ export const editListingService = async (
  */
 export const renewListingService = async (listingId, userId) => {
   try {
-    const listing = await Listing.findOne({ _id: listingId, userId });
+    const listing = await Listing.findOne({ _id: listingId, userId })
 
-    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND)
 
     const renewedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
@@ -284,13 +289,13 @@ export const renewListingService = async (listingId, userId) => {
         status: STATUS.PUBLISHED,
       },
       { new: true }
-    );
+    )
 
-    return renewedListing;
+    return renewedListing
   } catch (error) {
-    throw new Error(ERROR_UPDATING_LISTING);
+    throw new Error(ERROR_UPDATING_LISTING)
   }
-};
+}
 
 /**
  * Service to approve a listing.
@@ -299,15 +304,15 @@ export const renewListingService = async (listingId, userId) => {
  */
 export const approveListingService = async (listingId) => {
   try {
-    const listing = await Listing.findById(listingId);
+    const listing = await Listing.findById(listingId)
 
-    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND);
+    if (!listing) throw new Error(ERROR_LISTING_NOT_FOUND)
 
-    listing.status = STATUS.PUBLISHED;
-    await listing.save();
+    listing.status = STATUS.PUBLISHED
+    await listing.save()
 
-    return listing;
+    return listing
   } catch (error) {
-    throw new Error(ERROR_UPDATING_LISTING);
+    throw new Error(ERROR_UPDATING_LISTING)
   }
-};
+}

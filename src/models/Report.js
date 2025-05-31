@@ -1,12 +1,12 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
-const { Schema } = mongoose;
+const { Schema } = mongoose
 
 const ReportSchema = new Schema(
   {
     listingId: {
       type: Schema.Types.ObjectId,
-      ref: "Listing",
+      ref: 'Listing',
       required: true,
     },
     reason: {
@@ -27,8 +27,8 @@ const ReportSchema = new Schema(
     },
   },
   { timestamps: true }
-);
+)
 
-const Report = mongoose.model("Report", ReportSchema);
+const Report = mongoose.model('Report', ReportSchema)
 
-export default Report;
+export default Report

@@ -1,8 +1,8 @@
-import User from "../models/User.js";
+import User from '../models/User.js'
 import {
   ERROR_UPDATING_USER,
   ERROR_USER_NOT_FOUND,
-} from "../constants/messages.js";
+} from '../constants/messages.js'
 
 /**
  * Service to update user profile information.
@@ -16,10 +16,10 @@ export const updateUserProfileService = async (userId, updateData) => {
       userId,
       { $set: updateData },
       { new: true }
-    );
+    )
 
     if (!updatedUser) {
-      throw new Error(ERROR_USER_NOT_FOUND);
+      throw new Error(ERROR_USER_NOT_FOUND)
     }
 
     // Limit the information returned
@@ -29,10 +29,10 @@ export const updateUserProfileService = async (userId, updateData) => {
       phone: updatedUser.phone,
       profileName: updatedUser.profileName,
       profilePhoto: updatedUser.profilePhoto,
-    };
+    }
 
-    return limitedUserInfo;
+    return limitedUserInfo
   } catch (error) {
-    throw new Error(ERROR_UPDATING_USER);
+    throw new Error(ERROR_UPDATING_USER)
   }
-};
+}

@@ -15,13 +15,15 @@ export default [
       sourceType: 'module',
     },
     rules: {
-      'semi': ['error', 'always'],
+      'semi': ['error', 'never'],
       'quotes': ['error', 'single'],
       'no-unused-vars': ['warn'],
       'no-console': 'off',
       'no-undef': 'off',
     },
+    plugins: {
+      js: pluginJs,
+      react: pluginReact,
+    },
   },
-  pluginJs.configs.recommended,
-  ...fixupConfigRules(pluginReact.configs.recommended),
 ];
