@@ -21,13 +21,15 @@ import {
  * @param {number} page - The page number for pagination.
  * @param {number} limit - The number of listings per page.
  * @param {string} query - The search query to filter listings.
+ * @param {Object} filters - Additional filters for the listing search.
  * @returns {Promise<Object>} - A promise resolving to an object containing listings and total count.
  */
 export const getListings = async (
   province,
   page = 1,
   limit = 10,
-  query = ''
+  query = '',
+  filters = {}
 ) => {
   try {
     const skip = (page - 1) * limit
@@ -41,7 +43,29 @@ export const getListings = async (
     }).select('_id')
 
     // Build search filter
-    const searchFilter = query ? { title: new RegExp(query, 'i') } : {}
+    const searchFilter = query
+      ? {
+          $or: [
+            { title: new RegExp(query, 'i') },
+            { description: new RegExp(query, 'i') },
+          ],
+        }
+      : {}
+
+    // Build additional filters
+    const additionalFilters = {}
+    if (filters.onlyWhatsApp == true) {
+      additionalFilters.useWhatsApp = filters.onlyWhatsApp
+    }
+    if (filters.age) {
+      additionalFilters.age = filters.age
+    }
+    if (filters.price) {
+      additionalFilters.price = filters.price
+    }
+    if (filters.location) {
+      additionalFilters.location = filters.location
+    }
 
     // Fetch listings with pagination
     const [listings, total] = await Promise.all([
@@ -50,6 +74,7 @@ export const getListings = async (
         isDeleted: false,
         location: { $in: locations.map((location) => location._id) },
         ...searchFilter,
+        ...additionalFilters,
       })
         .populate('location', 'name subcountry country')
         .skip(skip)
@@ -57,6 +82,7 @@ export const getListings = async (
       Listing.countDocuments({
         location: { $in: locations.map((location) => location._id) },
         ...searchFilter,
+        ...additionalFilters,
       }),
     ])
 

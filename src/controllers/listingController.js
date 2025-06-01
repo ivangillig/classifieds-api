@@ -44,12 +44,39 @@ import {
  * @param {Function} next - The next middleware function.
  */
 export const fetchListings = async (req, res, next) => {
-  const { province, query } = req.query
+  const { province, query, onlyWhatsApp, age, priceMin, priceMax, location } =
+    req.query
   const page = parseInt(req.query.page, 10) || 1
-  const limit = parseInt(req.query.limit) || 12
+  const limit = parseInt(req.query.limit, 10) || 12
 
   try {
-    const { listings, total } = await getListings(province, page, limit, query)
+    const filters = {}
+    if (onlyWhatsApp !== undefined) {
+      filters.onlyWhatsApp = onlyWhatsApp === 'true'
+    }
+    if (age) {
+      filters.age = age
+    }
+    if (priceMin || priceMax) {
+      filters.price = {}
+      if (priceMin) {
+        filters.price.$gte = parseFloat(priceMin)
+      }
+      if (priceMax) {
+        filters.price.$lte = parseFloat(priceMax)
+      }
+    }
+    if (location) {
+      filters.location = location
+    }
+
+    const { listings, total } = await getListings(
+      province,
+      page,
+      limit,
+      query,
+      filters
+    )
     res.status(200).json(
       buildSuccessResponse({
         data: listings,

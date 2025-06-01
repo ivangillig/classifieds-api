@@ -1,7 +1,7 @@
-import globals from 'globals';
-import pluginJs from '@eslint/js';
-import pluginReact from 'eslint-plugin-react';
-import { fixupConfigRules } from '@eslint/compat';
+import globals from 'globals'
+import pluginJs from '@eslint/js'
+import pluginReact from 'eslint-plugin-react'
+import { fixupConfigRules } from '@eslint/compat'
 
 export default [
   {
@@ -15,8 +15,8 @@ export default [
       sourceType: 'module',
     },
     rules: {
-      'semi': ['error', 'never'],
-      'quotes': ['error', 'single'],
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
       'no-unused-vars': ['warn'],
       'no-console': 'off',
       'no-undef': 'off',
@@ -26,4 +26,4 @@ export default [
       react: pluginReact,
     },
   },
-];
+]
