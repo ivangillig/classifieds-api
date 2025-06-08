@@ -11,6 +11,7 @@ import {
   validateCreateReport,
   validateFetchUserListings,
 } from '../middleware/validationMiddleware.js'
+import { validateRecaptcha } from '../middleware/recaptchaMiddleware.js'
 
 import {
   createListing,
@@ -37,7 +38,7 @@ const router = express.Router()
 router.get('/', validateQueryParameter, fetchListings)
 router.post('/upload', authenticateUser, uploadImages)
 router.post('/deleteImages', deleteImagesController)
-router.post('/report', validateCreateReport, createReport)
+router.post('/report', validateRecaptcha, validateCreateReport, createReport)
 router.post(
   '/createListing',
   authenticateUser,
