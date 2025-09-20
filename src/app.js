@@ -38,7 +38,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/',
+      mongoUrl:
+        process.env.MONGO_URI ||
+        'mongodb://admin:SecureMongoDB2025!@127.0.0.1:27017/classifieds?authSource=admin',
     }),
   })
 )

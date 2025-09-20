@@ -12,43 +12,51 @@ This is the backend for a classified ads web application. The API provides endpo
 
 ## Getting Started
 
-First, clone the repository:
+### 1. Set up MongoDB (Docker Container)
+
+This project uses MongoDB running in a Docker container. Make sure you have Docker installed and your MongoDB container running with the following configuration:
+
+```bash
+# Example Docker command to run MongoDB
+docker run -d \
+  --name mongodb-classifieds \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=SecureMongoDB2025! \
+  mongo:latest
+```
+
+**MongoDB Connection Details:**
+
+- **Host:** 127.0.0.1
+- **Port:** 27017
+- **Username:** admin
+- **Password:** SecureMongoDB2025!
+- **Database:** classifieds
+- **Auth Source:** admin
+
+### 2. Set up the project
+
+Clone the repository:
 
 ```bash
 git clone https://github.com/ivangillig/classifieds-api.git
 cd classifieds-api
 ```
 
-Then, install the dependencies:
+Install the dependencies:
 
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
 ```
 
-Next, set up your environment variables. Create a `.env` file in the root directory and add the following:
+Set up your environment variables. Copy `.env.example` to `.env` and adjust as needed:
 
-```env
-BASE_URL=http://localhost:5000
-PORT=5000
-MONGO_URI=your_mongodb_uri
-
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
-
-JWT_SECRET=your_jwt_secret
-REFRESH_TOKEN_SECRET=your_refresh_token_secret
-SESSION_EXPIRY=60 * 15
-REFRESH_TOKEN_EXPIRY=60 * 60 * 24 * 30
-
-FRONTEND_URL=http://localhost:4000
+```bash
+copy .env.example .env
 ```
+
+### 3. Run the application
 
 Finally, run the development server:
 
