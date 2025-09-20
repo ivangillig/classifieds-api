@@ -52,6 +52,7 @@ userSchema.statics.findOrCreate = async function (profile) {
       user.googleName = googleName
       user.email = email
       user.profilePhoto = profilePhoto
+      user.isEmailConfirmed = true
       await user.save()
     } else {
       // Create a new user
@@ -61,7 +62,7 @@ userSchema.statics.findOrCreate = async function (profile) {
         profileName: googleName,
         email: email,
         profilePhoto: profilePhoto,
-        isEmailConfirmed: false,
+        isEmailConfirmed: true, // Google already verified this email
       })
       await user.save()
     }

@@ -14,9 +14,8 @@ import {
   ERROR_FAILED_LOGOUT,
   ERROR_INVALID_TOKEN_OR_USER_ID,
   ERROR_USER_NOT_FOUND,
-  EMAIL_CONFIRMED_SUCCESS
+  EMAIL_CONFIRMED_SUCCESS,
 } from '../constants/messages.js'
-import { sendEmailConfirmation } from '../utils/emailUtils.js'
 
 dotenv.config()
 
@@ -35,11 +34,6 @@ router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   async (req, res) => {
-    if (!req.user.isEmailConfirmed) {
-      await sendEmailConfirmation(req.user.email, req.user._id)
-      return res.redirect(`${process.env.FRONTEND_URL}/email-confirmation`)
-    }
-
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     })
@@ -63,7 +57,9 @@ router.get('/confirm-email/:token', async (req, res, next) => {
     user.isEmailConfirmed = true
     await user.save()
 
-    res.status(200).json(buildSuccessResponse({ message: EMAIL_CONFIRMED_SUCCESS }))
+    res
+      .status(200)
+      .json(buildSuccessResponse({ message: EMAIL_CONFIRMED_SUCCESS }))
   } catch (error) {
     next(error)
   }
