@@ -4,5 +4,9 @@ node_modules/
 /src/uploads/*
 /uploads/
 
+# GeoNames data files
+/src/data/*.txt
+/src/data/*.zip
+
 /.vscode
 /.vscode/*

@@ -7,6 +7,7 @@ import './config/passport.js'
 import routes from './routes/index.js'
 import dotenv from 'dotenv'
 import errorHandler from './middleware/errorHandler.js'
+import { multiTenantMiddleware } from './middleware/multiTenantMiddleware.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -28,6 +29,9 @@ app.use(
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+
+// Multi-tenant middleware (detects country from subdomain)
+app.use(multiTenantMiddleware)
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
