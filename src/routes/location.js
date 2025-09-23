@@ -24,7 +24,7 @@ router.get('/states', async (req, res, next) => {
 
     const states = await Location.find({
       countryCode: countryCode.toUpperCase(),
-      featureCode: 'ADM1', // Provinces/States only
+      isActive: true,
     }).distinct('subcountry')
 
     res.status(200).json(buildSuccessResponse({ data: states.sort() }))
@@ -42,7 +42,7 @@ router.get('/cities', async (req, res, next) => {
 
     let query = {
       countryCode: countryCode.toUpperCase(),
-      featureCode: { $in: ['PPL', 'PPLA', 'PPLC'] }, // Cities only
+      featureCode: { $in: ['PPL', 'PPLC'] }, // Cities only (PPL=city, PPLC=capital)
       isActive: true,
     }
 
@@ -73,7 +73,7 @@ router.get('/cities/:state', async (req, res, next) => {
     let query = {
       subcountry: new RegExp(state, 'i'),
       countryCode: countryCode.toUpperCase(),
-      featureCode: { $in: ['PPL', 'PPLA', 'PPLC'] }, // Cities only
+      featureCode: { $in: ['PPL', 'PPLC'] }, // Cities only (PPL=city, PPLC=capital)
       isActive: true,
     }
 
