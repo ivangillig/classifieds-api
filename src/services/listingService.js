@@ -50,8 +50,8 @@ export const getListings = async (
         $match: {
           $or: [
             { province_code: province },
-            { name: new RegExp(province, 'i') },
-            { 'province.name': new RegExp(province, 'i') },
+            { name: new RegExp(`^${province}$`, 'i') },
+            { 'province.name': new RegExp(`^${province}$`, 'i') },
           ],
         },
       },
