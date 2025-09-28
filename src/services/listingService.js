@@ -1,5 +1,6 @@
 // src/services/listingService.js
 
+import mongoose from 'mongoose'
 import Listing from '../models/Listing.js'
 import Location from '../models/Location.js'
 import Report from '../models/Report.js'
@@ -34,13 +35,30 @@ export const getListings = async (
   try {
     const skip = (page - 1) * limit
 
-    // Find matching locations by province or city
-    const locations = await Location.find({
-      $or: [
-        { subcountry: new RegExp(province, 'i') },
-        { name: new RegExp(province, 'i') },
-      ],
-    }).select('_id')
+    // Find matching locations by province code or city name
+    // Also need to search by province name via join with Province model
+    const locations = await Location.aggregate([
+      {
+        $lookup: {
+          from: 'provinces',
+          localField: 'province_code',
+          foreignField: 'code',
+          as: 'province',
+        },
+      },
+      {
+        $match: {
+          $or: [
+            { province_code: province },
+            { name: new RegExp(province, 'i') },
+            { 'province.name': new RegExp(province, 'i') },
+          ],
+        },
+      },
+      {
+        $project: { _id: 1 },
+      },
+    ])
 
     // Build search filter
     const searchFilter = query
@@ -76,7 +94,7 @@ export const getListings = async (
         ...searchFilter,
         ...additionalFilters,
       })
-        .populate('location', 'name subcountry country')
+        .populate('location', 'name province_code department_name country')
         .skip(skip)
         .limit(limit),
       Listing.countDocuments({
@@ -99,16 +117,70 @@ export const getListings = async (
  */
 export const getListingById = async (id) => {
   try {
-    const listing = await Listing.findById(id).populate(
-      'location',
-      'name subcountry country'
-    )
+    const listing = await Listing.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(id) },
+      },
+      {
+        $lookup: {
+          from: 'locations',
+          localField: 'location',
+          foreignField: '_id',
+          as: 'location',
+        },
+      },
+      {
+        $unwind: '$location',
+      },
+      {
+        $lookup: {
+          from: 'provinces',
+          localField: 'location.province_code',
+          foreignField: 'code',
+          as: 'location.province',
+        },
+      },
+      {
+        $unwind: {
+          path: '$location.province',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          // Include all listing fields
+          title: 1,
+          age: 1,
+          description: 1,
+          photos: 1,
+          price: 1,
+          phone: 1,
+          useWhatsApp: 1,
+          status: 1,
+          userId: 1,
+          reports: 1,
+          validUntil: 1,
+          isDeleted: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          // Include location with simplified province info
+          'location._id': 1,
+          'location.name': 1,
+          'location.province_code': 1,
+          'location.department_name': 1,
+          'location.country': 1,
+          'location.province._id': 1,
+          'location.province.code': 1,
+          'location.province.name': 1,
+        },
+      },
+    ])
 
-    if (!listing) {
+    if (!listing || listing.length === 0) {
       throw new Error(ERROR_LISTING_NOT_FOUND)
     }
 
-    return listing
+    return listing[0]
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
       throw error
@@ -195,7 +267,7 @@ export const getListingsByUser = async (
     // Find listings
     const [listings, total] = await Promise.all([
       Listing.find(filter)
-        .populate('location', 'name subcountry country')
+        .populate('location', 'name province_code department_name country')
         .skip(skip)
         .limit(limit),
       Listing.countDocuments(filter),
