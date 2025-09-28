@@ -2,9 +2,9 @@ import mongoose from 'mongoose'
 
 const locationSchema = new mongoose.Schema(
   {
-    // Unique identifiers
-    geonameid: {
-      type: Number,
+    // Official codes from Poblaciones.org
+    code: {
+      type: String,
       required: true,
       unique: true,
       index: true,
@@ -16,33 +16,56 @@ const locationSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    asciiName: {
+
+    // Province reference (Foreign Key)
+    province_code: {
       type: String,
       required: true,
+      index: true,
+      ref: 'Province', // Reference to Province model
     },
 
-    // Administrative hierarchy
+    // Department/Comuna (optional - mainly for Buenos Aires)
+    department_code: {
+      type: String,
+      required: false,
+      index: true,
+    },
+    department_name: {
+      type: String,
+      required: false,
+    },
+
+    // Country (inherited from province, but kept for queries)
     country: {
       type: String,
       required: true,
+      default: 'Argentina',
       index: true,
     },
     countryCode: {
       type: String,
       required: true,
-      length: 2, // ISO 3166-1 alpha-2
-    },
-    subcountry: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    subcountryCode: {
-      type: String,
-      required: false, // For province/state codes
+      default: 'AR',
+      length: 2,
     },
 
-    // Geographic coordinates (for proximity searches)
+    // Geographic data from Poblaciones.org - FLAT structure
+    surface: {
+      type: Number, // Superficie en km2
+      required: false,
+    },
+
+    latitude: {
+      type: Number,
+      required: true,
+    },
+    longitude: {
+      type: Number,
+      required: true,
+    },
+
+    // GeoJSON coordinates (for proximity searches)
     coordinates: {
       type: {
         type: String,
@@ -52,37 +75,21 @@ const locationSchema = new mongoose.Schema(
       coordinates: {
         type: [Number], // [longitude, latitude]
         required: true,
-        index: '2dsphere', // Geospatial index
+        index: '2dsphere',
       },
     },
 
-    // Additional information
-    featureClass: {
-      type: String,
-      required: true, // P (populated place), A (administrative), etc.
-    },
-    featureCode: {
-      type: String,
-      required: true, // PPL (populated place), ADM1 (first-order administrative), etc.
-    },
+    // Population (if available)
     population: {
       type: Number,
       default: 0,
     },
-    timezone: {
-      type: String,
-      required: false,
-    },
 
-    // Alternative names (multilingual support)
-    alternateNames: [
-      {
-        name: String,
-        language: String, // es, en, etc.
-        isPreferredName: { type: Boolean, default: false },
-        isShortName: { type: Boolean, default: false },
-      },
-    ],
+    // Data source tracking
+    source: {
+      type: String,
+      default: 'poblaciones.org',
+    },
 
     // Metadata
     isActive: {
@@ -100,13 +107,72 @@ const locationSchema = new mongoose.Schema(
 )
 
 // Compound indexes for optimized searches
-locationSchema.index({ country: 1, subcountry: 1 })
-locationSchema.index({ countryCode: 1, subcountryCode: 1 })
-locationSchema.index({ name: 'text', asciiName: 'text' }) // Text search
+locationSchema.index({ province_code: 1, department_code: 1 })
+locationSchema.index({ countryCode: 1, province_code: 1 })
+locationSchema.index({ name: 'text' }) // Text search
+
+// Pre-save middleware to generate GeoJSON coordinates
+locationSchema.pre('save', function (next) {
+  if (this.latitude && this.longitude) {
+    this.coordinates = {
+      type: 'Point',
+      coordinates: [this.longitude, this.latitude],
+    }
+  }
+  next()
+})
 
 // Static methods
-locationSchema.statics.findByCountry = function (countryCode) {
+locationSchema.statics.findByCountry = function (countryCode = 'AR') {
   return this.find({ countryCode, isActive: true })
+}
+
+// findProvinces method removed - provinces are now in separate Province model
+
+locationSchema.statics.findCitiesByProvince = function (
+  provinceCode,
+  countryCode = 'AR'
+) {
+  return this.find({
+    countryCode,
+    province_code: provinceCode,
+    isActive: true,
+  }).sort({ name: 1 })
+}
+
+locationSchema.statics.findDepartmentsByProvince = function (
+  provinceCode,
+  countryCode = 'AR'
+) {
+  return this.find({
+    countryCode,
+    province_code: provinceCode,
+    department_code: { $exists: true, $ne: null }, // Only locations with departments
+    isActive: true,
+  }).sort({ name: 1 })
+}
+
+// Method to get location with province information
+locationSchema.statics.findWithProvince = function (query = {}) {
+  return this.aggregate([
+    {
+      $match: { isActive: true, ...query },
+    },
+    {
+      $lookup: {
+        from: 'provinces',
+        localField: 'province_code',
+        foreignField: 'code',
+        as: 'province',
+      },
+    },
+    {
+      $unwind: '$province',
+    },
+    {
+      $sort: { name: 1 },
+    },
+  ])
 }
 
 locationSchema.statics.findByProximity = function (
@@ -118,27 +184,25 @@ locationSchema.statics.findByProximity = function (
     coordinates: {
       $near: {
         $geometry: { type: 'Point', coordinates: [longitude, latitude] },
-        $maxDistance: maxDistanceKm * 1000, // Convert to meters
+        $maxDistance: maxDistanceKm * 1000,
       },
     },
     isActive: true,
   })
 }
 
-locationSchema.statics.searchByName = function (searchTerm, country = 'AR') {
+locationSchema.statics.searchByName = function (
+  searchTerm,
+  countryCode = 'AR'
+) {
   return this.find({
-    $and: [
-      { countryCode: country },
-      { isActive: true },
-      {
-        $or: [
-          { name: new RegExp(searchTerm, 'i') },
-          { asciiName: new RegExp(searchTerm, 'i') },
-          { 'alternateNames.name': new RegExp(searchTerm, 'i') },
-        ],
-      },
+    countryCode,
+    isActive: true,
+    $or: [
+      { name: new RegExp(searchTerm, 'i') },
+      { department_name: new RegExp(searchTerm, 'i') },
     ],
-  })
+  }).sort({ name: 1 })
 }
 
 const Location = mongoose.model('Location', locationSchema)
