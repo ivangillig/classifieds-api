@@ -409,8 +409,175 @@ export const approveListingService = async (listingId) => {
     listing.status = STATUS.PUBLISHED
     await listing.save()
 
-    return listing
+    return listing.toObject()
   } catch (error) {
     throw new Error(ERROR_UPDATING_LISTING)
+  }
+}
+
+/**
+ * Fetch all listings for admin panel with pagination and filters.
+ * @param {number} page - The page number for pagination.
+ * @param {number} limit - The number of listings per page.
+ * @param {string} query - The search query to filter listings by title/description.
+ * @param {Object} filters - Additional filters (status, province, userId, etc.).
+ * @returns {Promise<Object>} - A promise resolving to an object containing listings and total count.
+ */
+export const getListingsForAdmin = async (
+  page = 1,
+  limit = 10,
+  query = '',
+  filters = {}
+) => {
+  try {
+    const skip = (page - 1) * limit
+
+    // Build search filter
+    const searchFilter = query
+      ? {
+          $or: [
+            { title: new RegExp(query, 'i') },
+            { description: new RegExp(query, 'i') },
+          ],
+        }
+      : {}
+
+    // Build additional filters
+    const additionalFilters = {}
+
+    // Status filter
+    if (filters.status) {
+      additionalFilters.status = filters.status
+    }
+
+    // User filter
+    if (filters.userId) {
+      additionalFilters.userId = filters.userId
+    }
+
+    // WhatsApp filter
+    if (filters.onlyWhatsApp === true) {
+      additionalFilters.useWhatsApp = filters.onlyWhatsApp
+    }
+
+    // Age filter
+    if (filters.age) {
+      additionalFilters.age = filters.age
+    }
+
+    // Price filter
+    if (filters.price) {
+      additionalFilters.price = filters.price
+    }
+
+    // Location/Province filter
+    let locationFilter = {}
+    if (filters.province) {
+      // Find matching locations by province code or city name
+      const locations = await Location.aggregate([
+        {
+          $lookup: {
+            from: 'provinces',
+            localField: 'province_code',
+            foreignField: 'code',
+            as: 'province',
+          },
+        },
+        {
+          $match: {
+            $or: [
+              { province_code: filters.province },
+              { name: new RegExp(`^${filters.province}$`, 'i') },
+              { 'province.name': new RegExp(`^${filters.province}$`, 'i') },
+            ],
+          },
+        },
+        {
+          $project: { _id: 1 },
+        },
+      ])
+
+      if (locations.length > 0) {
+        locationFilter.location = {
+          $in: locations.map((location) => location._id),
+        }
+      }
+    }
+
+    // Include deleted listings for admin (they can see everything)
+    const baseFilter = {
+      ...searchFilter,
+      ...additionalFilters,
+      ...locationFilter,
+    }
+
+    // Fetch listings with pagination
+    const [listings, total] = await Promise.all([
+      Listing.find(baseFilter)
+        .populate('location', 'name province_code department_name country')
+        .populate('userId', 'email name') // Include user info for admin
+        .sort({ createdAt: -1 }) // Most recent first
+        .skip(skip)
+        .limit(limit),
+      Listing.countDocuments(baseFilter),
+    ])
+
+    return { data: listings, total }
+  } catch (error) {
+    throw new Error(ERROR_LISTINGS_FETCH_FAILED)
+  }
+}
+
+/**
+ * Get listing statistics for admin dashboard.
+ * @returns {Promise<Object>} - A promise resolving to statistics object with counts by status.
+ */
+export const getListingStatsForAdmin = async () => {
+  try {
+    const stats = await Listing.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ])
+
+    // Convert array to object with default values
+    const data = {
+      total: 0,
+      published: 0,
+      underReview: 0,
+      paused: 0,
+      expired: 0,
+      blocked: 0,
+    }
+
+    // Calculate total and individual counts
+    stats.forEach((stat) => {
+      data.total += stat.count
+
+      switch (stat._id) {
+        case STATUS.PUBLISHED:
+          data.published = stat.count
+          break
+        case STATUS.UNDER_REVIEW:
+          data.underReview = stat.count
+          break
+        case STATUS.PAUSED:
+          data.paused = stat.count
+          break
+        case STATUS.EXPIRED:
+          data.expired = stat.count
+          break
+        case STATUS.BLOCKED:
+          data.blocked = stat.count
+          break
+      }
+    })
+
+    return { data }
+  } catch (error) {
+    throw new Error(ERROR_LISTINGS_FETCH_FAILED)
   }
 }

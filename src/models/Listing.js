@@ -46,7 +46,7 @@ const ListingSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['published', 'paused', 'underReview', 'expired', 'blocked'],
+      enum: ['published', 'paused', 'underReview', 'expired', 'blocked', 'rejected'],
       default: 'underReview',
       required: true,
     },

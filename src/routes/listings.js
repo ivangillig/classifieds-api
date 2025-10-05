@@ -23,7 +23,6 @@ import {
   fetchUserListings,
   toggleListingStatus,
   renewListing,
-  approveListing,
 } from '../controllers/listingController.js'
 import {
   uploadImages,
@@ -55,12 +54,6 @@ router.get(
 )
 router.patch('/:id/toggle-status', authenticateUser, toggleListingStatus)
 router.patch('/:id/renewListing', authenticateUser, renewListing)
-router.patch(
-  '/:id/approve',
-  authenticateUser,
-  authorizeRoles(ROLES.ADMIN, ROLES.MODERATOR),
-  approveListing
-)
 router.delete('/:id', authenticateUser, deleteListing)
 router.get('/:id', fetchListingById)
 

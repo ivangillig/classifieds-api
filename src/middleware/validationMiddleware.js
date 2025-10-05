@@ -1,4 +1,4 @@
-import { validationResult, query, body } from 'express-validator'
+import { validationResult, query, body, param } from 'express-validator'
 import { getBusinessErrorResponse } from '../utils/responseUtils.js'
 import {
   ERROR_TITLE_REQUIRED,
@@ -137,6 +137,38 @@ export const validateUpdateUserProfile = [
   },
 ]
 
+export const validateIdParameter = [
+  param('id').isMongoId().withMessage('Invalid ID format'),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array(),
+      })
+    }
+    next()
+  },
+]
+
+export const validateUpdateStatus = [
+  body('status')
+    .isString()
+    .withMessage('Status must be a string')
+    .isIn(['published', 'paused', 'underReview', 'expired', 'blocked'])
+    .withMessage('Invalid status value'),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array(),
+      })
+    }
+    next()
+  },
+]
+
 export default {
   validateQueryParameter,
   validateCreateListing,
@@ -144,4 +176,6 @@ export default {
   validateCreateReport,
   validateFetchUserListings,
   validateUpdateUserProfile,
+  validateIdParameter,
+  validateUpdateStatus,
 }
