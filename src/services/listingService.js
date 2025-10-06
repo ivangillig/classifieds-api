@@ -85,23 +85,20 @@ export const getListings = async (
       additionalFilters.location = filters.location
     }
 
-    // Fetch listings with pagination
+    // Fetch listings with pagination - only published (automatically excludes deleted)
+    const baseQuery = {
+      ...PUBLISHED_STATUS_FILTER, // This ensures only published listings are shown
+      location: { $in: locations.map((location) => location._id) },
+      ...searchFilter,
+      ...additionalFilters,
+    }
+
     const [listings, total] = await Promise.all([
-      Listing.find({
-        ...PUBLISHED_STATUS_FILTER,
-        isDeleted: false,
-        location: { $in: locations.map((location) => location._id) },
-        ...searchFilter,
-        ...additionalFilters,
-      })
+      Listing.find(baseQuery)
         .populate('location', 'name province_code department_name country')
         .skip(skip)
         .limit(limit),
-      Listing.countDocuments({
-        location: { $in: locations.map((location) => location._id) },
-        ...searchFilter,
-        ...additionalFilters,
-      }),
+      Listing.countDocuments(baseQuery),
     ])
 
     return { listings, total }
@@ -260,8 +257,11 @@ export const getListingsByUser = async (
   try {
     const skip = (page - 1) * limit
 
-    // Dinamic filter
-    const filter = { userId, isDeleted: false }
+    // Dynamic filter - exclude deleted listings
+    const filter = {
+      userId,
+      status: { $ne: STATUS.DELETED }, // Exclude deleted listings
+    }
     if (status) filter.status = status
 
     // Find listings
@@ -321,7 +321,7 @@ export const deleteListingService = async (listingId, userId) => {
 
     const deletedListing = await Listing.findOneAndUpdate(
       { _id: listingId, userId },
-      { isDeleted: true },
+      { status: STATUS.DELETED },
       { new: true }
     )
 
@@ -551,6 +551,7 @@ export const getListingStatsForAdmin = async () => {
       paused: 0,
       expired: 0,
       blocked: 0,
+      deleted: 0,
     }
 
     // Calculate total and individual counts
@@ -572,6 +573,9 @@ export const getListingStatsForAdmin = async () => {
           break
         case STATUS.BLOCKED:
           data.blocked = stat.count
+          break
+        case STATUS.DELETED:
+          data.deleted = stat.count
           break
       }
     })

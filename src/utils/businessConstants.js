@@ -6,4 +6,5 @@ export const STATUS = {
   UNDER_REVIEW: 'underReview',
   EXPIRED: 'expired',
   BLOCKED: 'blocked',
+  DELETED: 'deleted',
 }

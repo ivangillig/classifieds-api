@@ -19,8 +19,6 @@ import {
   ERROR_LISTING_STATUS_UPDATE_FAILED,
   ERROR_LISTING_DELETE_FAILED,
   ERROR_UPDATING_LISTING,
-  SUCCESS_LISTING_APPROVED,
-  SUCCESS_LISTING_DELETED,
   SUCCESS_LISTING_STATUS_UPDATED,
   ERROR_ACCESS_DENIED,
 } from '../constants/messages.js'
@@ -108,9 +106,7 @@ export const approveListing = async (req, res) => {
     const { id } = req.params
     const updatedListing = await approveListingService(id)
 
-    const response = buildSuccessResponse(
-      { data: updatedListing },
-    )
+    const response = buildSuccessResponse({ data: updatedListing })
     res.status(200).json(response)
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {
@@ -205,10 +201,7 @@ export const deleteListing = async (req, res) => {
 
     const deletedListing = await deleteListingService(id, listing.userId)
 
-    const response = buildSuccessResponse(
-      { data: deletedListing },
-      SUCCESS_LISTING_DELETED
-    )
+    const response = buildSuccessResponse({ data: deletedListing })
     res.status(200).json(response)
   } catch (error) {
     if (error.message === ERROR_LISTING_NOT_FOUND) {

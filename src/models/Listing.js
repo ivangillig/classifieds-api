@@ -46,15 +46,11 @@ const ListingSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['published', 'paused', 'underReview', 'expired', 'blocked', 'rejected'],
+      enum: ['published', 'paused', 'underReview', 'expired', 'blocked', 'rejected', 'deleted'],
       default: 'underReview',
       required: true,
     },
     reports: { type: Number, default: 0 },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
     validUntil: {
       type: Date,
       default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default: 30 days from now
